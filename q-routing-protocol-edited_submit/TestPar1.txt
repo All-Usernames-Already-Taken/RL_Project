@@ -1,0 +1,16 @@
+fileinputfile:test1
+timesteps:2001
+iterations:2000
+Number Layers: 3
+Layer Type: first, middle,last
+layer Size: 40,20,13
+mean_value:0,0,0
+std_val:0.1,0.1,0.1
+constant_val:1,1,1
+dumps:50
+arrival:5
+learning rate:.001
+resources_bbu:30
+resources_edge:10
+cost:100
+act:0,0,1
