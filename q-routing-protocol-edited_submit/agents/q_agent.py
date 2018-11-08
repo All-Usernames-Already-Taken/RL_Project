@@ -104,10 +104,11 @@ class networkTabularQAgent(object):
     self.all_act_prob = tf.nn.softmax(self.all_act) # use softmax to convert to probability
 
     with tf.name_scope('loss'):
-    	self.neg_log_prob = tf.reduce_sum(-tf.log(self.all_act_prob) * tf.one_hot(self.tf_acts, self.n_actions), axis = 1)
+      self.neg_log_prob = tf.reduce_sum(-tf.log(self.all_act_prob) * tf.one_hot(self.tf_acts, self.n_actions), axis = 1)
       # reward guided loss
       self.loss = tf.reduce_mean(self.neg_log_prob * self.tf_vt)
       print("help")
+      
     with tf.name_scope('train'):
       self.train_op = tf.train.AdamOptimizer(self.lr).minimize(self.loss)
 
@@ -220,7 +221,7 @@ class networkTabularQAgent(object):
       np.array(self.ep_as), 
       np.array(discounted_ep_rs_norm), 
       l)
-    loss, log_probs, act_val = self.sess.run(
+    _, loss, log_probs, act_val = self.sess.run(
       [self.train_op, self.loss, self.neg_log_prob, self.all_act], 
       feed_dict = {
         self.tf_obs: X_batch,  # shape = [None, n_obs]
