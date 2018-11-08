@@ -105,7 +105,8 @@ class networkTabularQAgent(object):
 
     with tf.name_scope('loss'):
     	self.neg_log_prob = tf.reduce_sum(-tf.log(self.all_act_prob)*tf.one_hot(self.tf_acts, self.n_actions), axis = 1)
-      self.loss = tf.reduce_mean(self.neg_log_prob * self.tf_vt) # reward guided loss
+      # reward guided loss
+      self.loss = tf.reduce_mean(self.neg_log_prob * self.tf_vt)
       print("help")
     with tf.name_scope('train'):
       self.train_op = tf.train.AdamOptimizer(self.lr).minimize(self.loss)
