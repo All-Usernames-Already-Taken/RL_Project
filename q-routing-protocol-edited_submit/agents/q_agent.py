@@ -12,8 +12,8 @@ class networkTabularQAgent(object):
 
     #cg: reset configuration for each node in the graph
     self.config = {
-      "init_mean" : 0.0,   # Initialize Q values with this mean
-      "init_std" : 0.0,    # Initialize Q values with this standard deviation
+      "init_mean": 0.0,   # Initialize Q values with this mean
+      "init_std": 0.0,    # Initialize Q values with this standard deviation
       "learning_rate" : 0.7, 
       "eps": 0.1,          # Epsilon in epsilon greedy policies
       "discount": 1, 
