@@ -200,7 +200,7 @@ class networkTabularQAgent(object):
     l = len(self.ep_obs)
     self.ep_obs2 = np.array(self.ep_obs).reshape(l, self.n_features)
     discounted_ep_rs_norm = self._discount_and_norm_rewards()
-    loss, log_probs, act_val, l1 = self.sess.run(
+    _, loss, log_probs, act_val, l1 = self.sess.run(
       [self.train_op, self.loss, self.neg_log_prob, self.all_act, self.layer], 
       feed_dict = {
        self.tf_obs: np.vstack(self.ep_obs2),        # shape = [None, n_obs]
@@ -219,7 +219,7 @@ class networkTabularQAgent(object):
       np.array(self.ep_as), 
       np.array(discounted_ep_rs_norm), 
       l)
-    loss, log_probs, act_val = self.sess.run(
+    _, loss, log_probs, act_val = self.sess.run(
       [self.train_op, self.loss, self.neg_log_prob, self.all_act], 
       feed_dict = {
         self.tf_obs: X_batch,  # shape = [None, n_obs]
