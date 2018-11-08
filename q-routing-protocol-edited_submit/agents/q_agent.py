@@ -57,7 +57,6 @@ class networkTabularQAgent(object):
         Z_batch = Z_[perm]
         # Return the images and the labels
         return X_batch, Y_batch, Z_batch
-
     def _build_net(self):
         with tf.name_scope('inputs'):
             self.tf_obs = tf.placeholder(tf.float32, [None, self.n_features], name="observations")
