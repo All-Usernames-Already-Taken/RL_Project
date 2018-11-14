@@ -1,7 +1,7 @@
 import gym
 import numpy as np
 import heapq
-import collections
+from collections import defaultdict
 from os import path
 from os import sys
 import math
@@ -18,6 +18,7 @@ events = 0
 # based on code: https://github.com/Duncanswilson/q-routing-protocol
 # /* Event structure. */
 class event:
+    # event is a packet?
     def __init__(self, time, src):
         # /* Initialize new event. */
         self.dest = UNKNOWN
@@ -59,8 +60,8 @@ class NetworkSimulatorEnv(gym.Env):
         self.event_queue = []  # Q.PriorityQueue()
         self.history_queue = []
         self.nlinks = {}
-        self.links = collections.defaultdict(dict)
-        self.link_num = collections.defaultdict(dict)
+        self.links = defaultdict(dict)
+        self.link_num = defaultdict(dict)
         self.total_routing_time = 0.0
         self.routed_packets = 0
         self.total_hops = 0
@@ -87,10 +88,14 @@ class NetworkSimulatorEnv(gym.Env):
 
         self.events = 0
 
+        # Nodes connected to RRHs
         self.sources = [0, 1, 2, 6, 7, 8]
+
+        # Nodes connected to BBU pools
         self.dests = [3, 5]
-        self.next_source = 0
-        self.next_dest = 0
+
+        # self.next_source = 0
+        # self.next_dest = 0
 
     def _step(self, action):
         # if(self.total_routing_time/self.routed_packets < 10): #totally random, need change
@@ -204,6 +209,7 @@ class NetworkSimulatorEnv(gym.Env):
         for i in self.sources:
             inject_event = event(0.0, i)
             inject_event.source = INJECT
+            # Call mean is the lambda parameter of the poisson distribution
             if self.callmean == 1.0:
                 inject_event.etime = -math.log(random.random())
             else:
