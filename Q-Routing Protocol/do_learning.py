@@ -1,6 +1,4 @@
-import gym
 import numpy as np
-from gym import spaces, envs
 from envs.simulator import NetworkSimulatorEnv
 from agents.q_agent import networkTabularQAgent
 import sys
