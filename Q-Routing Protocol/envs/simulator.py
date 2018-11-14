@@ -1,13 +1,12 @@
 import gym
-import math
-import random
+from gym import spaces
+import numpy as np
 import heapq
 import collections
-import numpy as np
-from gym import spaces
 from os import path
 from os import sys
-
+import math
+import random
 try:
     import Queue as Q  # ver. < 3.0
 except ImportError:
@@ -29,8 +28,8 @@ class event:
         self.qtime = 0
         #cg: need to add status for lifetime in bbu site,
         #need to add status for path taken, and which bbu resource used
-        self.resources = []
-        self.lifetime = 10
+        self.resources=[]
+        self.lifetime=10
 
 # /* Special events. */
 INJECT = -1
@@ -44,7 +43,7 @@ NIL = Nil =  -1
 
 class NetworkSimulatorEnv(gym.Env):
 
-    #We init the network simulator here
+    # We init the network simulator here
     def __init__(self):
         self.viewer = None
         self.graphname = 'data/graph1.txt'
@@ -55,8 +54,8 @@ class NetworkSimulatorEnv(gym.Env):
         self.enqueued = {}
         self.nenqueued = {}
         self.interqueuen = []
-        self.event_queue = []    #Q.PriorityQueue()
-        self.history_queue = []
+        self.event_queue = []#Q.PriorityQueue()
+        self.history_queue=[]
         self.nlinks = {}
         self.links = collections.defaultdict(dict)
         self.link_num = collections.defaultdict(dict)
@@ -69,16 +68,16 @@ class NetworkSimulatorEnv(gym.Env):
         self.active_packets = 0
         self.queuelimit = 100
         self.send_fail = 0
-        self.history_queue = []
+        self.history_queue=[]
         #
         self.callmean = 5 #network load
-        self.bbu_limit = 0
-        self.edge_limit = 0
-        self.cost = 0
+        self.bbu_limit=0
+        self.edge_limit=0
+        self.cost=0
 
 
-        self.distance = []   #np.zeros((self.nnodes,self.nnodes))
-        self.shortest =  []  #np.zeros((self.nnodes,self.nnodes))
+        self.distance = []#np.zeros((self.nnodes,self.nnodes))
+        self.shortest =  []#np.zeros((self.nnodes,self.nnodes))
 
 
         self.next_dest = 0
@@ -88,8 +87,8 @@ class NetworkSimulatorEnv(gym.Env):
 
         self.events = 0
 
-        self.sources = [0, 1, 2, 6, 7, 8]
-        self.dests = [3, 5]
+        self.sources = [0,1,2,6,7,8]
+        self.dests = [3,5]
         self.next_source = 0
         self.next_dest = 0
 
@@ -106,12 +105,12 @@ class NetworkSimulatorEnv(gym.Env):
         #if the link wasnt good
         if action < 0 or action not in self.links[current_node]:
             #delete the event
-            resources_add_back = current_event.resources
+            resources_add_back=current_event.resources
             if resources_add_back:
                 for i in resources_add_back:
-                    src, act = i
-                    l_num = self.link_num[src][act]
-                    self.resources_edges[l_num] += 1
+                    src,act=i
+                    l_num=self.link_num[src][act]
+                    self.resources_edges[l_num]+=1
 
             self.current_event = self.get_new_packet_bump()
             self.send_fail = self.send_fail + 1
@@ -123,10 +122,10 @@ class NetworkSimulatorEnv(gym.Env):
 
         else:
             next_node = self.links[current_node][action]
-            l_num = self.link_num[current_node][action]
-            self.resources_edges[l_num] += -1
+            l_num=self.link_num[current_node][action]
+            self.resources_edges[l_num]+=-1
             current_event.hops += 1
-            current_event.resources.append((current_node, action))
+            current_event.resources.append((current_node,action))
             #need to check link valid if in dest or not in destination
         #handle the case where next_node is your destination
             if next_node in self.dests:
@@ -134,16 +133,16 @@ class NetworkSimulatorEnv(gym.Env):
                 #cg: check if there are enough resources at that destination
                 #self.resources_edges[l_num]+=-1
                 current_event.node = next_node #do the send!
-                self.resources_bbu[self.dests.index(next_node)] -= 1
+                self.resources_bbu[self.dests.index(next_node)]-=1
                 self.routed_packets +=  1
                 self.active_packets -= 1
                 #cg: need to add deletion to event queue
 
                 ###cg:add this completed route to history log
-                current_event.dest = next_node
-                current_event.qtime += 0.05
-                current_event.qtime += 2.7
-                self.history_queue.append((current_event.etime, current_event.qtime))
+                current_event.dest=next_node
+                current_event.qtime+=0.05
+                current_event.qtime+=2.7
+                self.history_queue.append((current_event.etime,current_event.qtime))
                 ###
 
                 ##cg: add event to system for when the item is suppose to leave
@@ -165,14 +164,14 @@ class NetworkSimulatorEnv(gym.Env):
 
                 #add (source,action) to history of path
 
-                current_event.qtime += 0.05
-                next_time = current_event.etime + .05
+                current_event.qtime+=0.05
+                next_time=current_event.etime+.05
                 current_event.etime = next_time
                 #self.enqueued[next_node] = next_time
 
                 #current_event.qtime = current_time
                 self.events += 1
-                heapq.heappush(self.event_queue,((current_time, - self.events), current_event))
+                heapq.heappush(self.event_queue,((current_time, -self.events), current_event))
                 self.current_event = self.get_new_packet_bump()
 
                 if self.current_event == NIL:
@@ -183,21 +182,21 @@ class NetworkSimulatorEnv(gym.Env):
 
     def _reset(self):
         self.readin_graph()
-        self.distance = np.zeros((self.nnodes, self.nnodes))
-        self.shortest =  np.zeros((self.nnodes, self.nnodes))
+        self.distance = np.zeros((self.nnodes,self.nnodes))
+        self.shortest =  np.zeros((self.nnodes,self.nnodes))
         self.compute_best()
         self.done = False
-        self.interqueuen = [self.interqueue] * self.nnodes
+        self.interqueuen = [self.interqueue]*self.nnodes
 
-        self.event_queue = [] #Q.PriorityQueue()
-        self.total_routing_time = 0.0
+        self.event_queue =[] #Q.PriorityQueue()
+        self.total_routing_time= 0.0
 
-        self.enqueued = [0.0] * self.nnodes
+        self.enqueued = [0.0]*self.nnodes
         self.nenqueued = [0]*self.nnodes
         self.send_fail = 0
-        self.history_queue = []
-        self.resources_edges = [self.edge_limit] * self.nedges
-        self.resources_bbu = [self.bbu_limit] * len(self.dests)
+        self.history_queue=[]
+        self.resources_edges=[self.edge_limit]*self.nedges
+        self.resources_bbu=[self.bbu_limit]*len(self.dests)
         self.events = 1
         for i in self.sources:
             inject_event = event(0.0, i )
@@ -205,13 +204,13 @@ class NetworkSimulatorEnv(gym.Env):
             if self.callmean == 1.0:
                 inject_event.etime = -math.log(random.random())
             else:
-                inject_event.etime = -math.log(1- random.random()) * float(self.callmean)
+                inject_event.etime = -math.log(1- random.random())*float(self.callmean)
 
 
 
 
             inject_event.qtime = 0.0
-            heapq.heappush(self.event_queue, ((inject_event.etime, -self.events), inject_event))
+            heapq.heappush(self.event_queue,((inject_event.etime, -self.events), inject_event))
             self.injections += 1
             self.events += 1
 
@@ -257,7 +256,7 @@ class NetworkSimulatorEnv(gym.Env):
 
     def reset_history(self):
         self.send_fail = 0
-        self.history_queue = []
+        self.history_queue=[]
 
 
 
@@ -265,7 +264,7 @@ class NetworkSimulatorEnv(gym.Env):
 
         self.active_packets = self.active_packets + 1
         current_event = event(time, src)
-        current_event.source = src
+        current_event.source=src
         #current_event.source = current_event.node = source
 
         return current_event
@@ -273,15 +272,15 @@ class NetworkSimulatorEnv(gym.Env):
     def get_new_packet_bump(self):
         #cg:needs to get updated
         current_event =  heapq.heappop(self.event_queue)[1]
-        while current_event.dest >= 0:
+        while current_event.dest>=0:
             #add resources back
-            resources_add_back = current_event.resources
+            resources_add_back=current_event.resources
             for i in resources_add_back:
-                src, act = i
-                l_num = self.link_num[src][act]
-                self.resources_edges[l_num] += 1
+                src,act=i
+                l_num=self.link_num[src][act]
+                self.resources_edges[l_num]+=1
             d=current_event.dest
-            self.resources_bbu[self.dests.index(d)] += 1
+            self.resources_bbu[self.dests.index(d)]+=1
             #get new item from queue
             current_event =  heapq.heappop(self.event_queue)[1]
             #self.current_event = self.get_new_packet_bump()
@@ -294,13 +293,13 @@ class NetworkSimulatorEnv(gym.Env):
              if self.callmean == 1.0 or self.callmean == 0.0:
                  current_event.etime += -math.log(1 - random.random())
              else:
-                 current_event.etime += -math.log(1- random.random()) * float(self.callmean)
+                 current_event.etime += -math.log(1- random.random())*float(self.callmean)
 
              #current_event.qtime = current_time  #cg:do i need this???
-             current_event.qtime = 0
+             current_event.qtime=0
              heapq.heappush(self.event_queue,((current_event.etime, -self.events), current_event))
              self.events += 1
-             self.injections += 1
+             self.injections+=1
             #cg: packet enters system at this time
              current_event = self.start_packet(current_time,src)
              if current_event == NIL :
@@ -312,23 +311,23 @@ class NetworkSimulatorEnv(gym.Env):
         return current_event
 
     def calculate_reward(self):
-        reward = 0
-        l = 0
+        reward=0
+        l=0
         for i in self.history_queue:
-            reward += -i[1]
-            l += 1
-        reward=reward - self.cost*self.send_fail
-        l = l + self.send_fail
-        avg_reward = reward/l
+            reward+=-i[1]
+            l+=1
+        reward=reward-self.cost*self.send_fail
+        l=l+self.send_fail
+        avg_reward=reward/l
         return avg_reward
     def add_link_lifetime_event(self):
         current_event.node = next_node #do the send!
         current_event.hops += 1
-        current_event.source = -5
+        current_event.source=-5
         #current_event
         #add (source,action) to history of path
         #current_event.hist
-        heapq.heappush(self.event_queue, ((current_time+current_event.lifetime, -self.events), current_event))
+        heapq.heappush(self.event_queue,((current_time+current_event.lifetime, -self.events), current_event))
 
 
 
@@ -341,7 +340,7 @@ class NetworkSimulatorEnv(gym.Env):
                 if i == j:
                     self.distance[i][j] = 0
                 else:
-                    self.distance[i][j] = self.nnodes + 1
+                    self.distance[i][j] = self.nnodes+1
                 self.shortest[i][j] = -1
 
         while changing:
