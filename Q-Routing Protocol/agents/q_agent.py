@@ -1,6 +1,6 @@
+from random import random
 import collections
 import numpy as np
-from random import random
 import tensorflow as tf
 
 class networkTabularQAgent(object):
@@ -8,20 +8,39 @@ class networkTabularQAgent(object):
   Agent implementing tabular Q-learning for the NetworkSimulatorEnv.
   """
 
-  def __init__(self, num_nodes, num_actions, node, nlinks, links, link_num, dests, n_features, learning_rate, num_layers, layer_size, layer_type, mean_val, std_val, constant_val, activation_type):
+  def __init__(
+      self, 
+      num_nodes, 
+      num_actions, 
+      node, 
+      nlinks, 
+      links, 
+      link_num, 
+      dests, 
+      n_features, 
+      learning_rate, 
+      num_layers, 
+      layer_size, 
+      layer_type, 
+      mean_val, 
+      std_val, 
+      constant_val, 
+      activation_type):
 
-    #cg: reset configuration for each node in the graph
-    self.config = {
-      "init_mean": 0.0,   # Initialize Q values with this mean
-      "init_std": 0.0,    # Initialize Q values with this standard deviation
+    # cg: reset configuration for each node in the graph by initializing Q-values' means, standard deviations, 
+    # learning rates, greediness, and discount factors
+    self.config = { 
+      "init_mean": 0.0, 
+      "init_std": 0.0, 
       "learning_rate" : 0.7, 
-      "eps": 0.1,          # Epsilon in epsilon greedy policies
+      "eps": 0.1, 
       "discount": 1, 
-      "n_iter": 10000000}    # Number of iterations
-    #self.q = np.zeros((num_nodes, num_nodes, num_actions))
+      "n_iter": 10000000} 
+    # self.q = np.zeros((num_nodes, num_nodes, num_actions))
 
-    self.hist_resources = []
-    self.hist_action = []
+    self.hist_resources, self.hist_action = ([],)*2
+    # self.hist_resources = []
+    # self.hist_action = []
     self.n = node
     self.links = links
     self.link_num = link_num
@@ -29,8 +48,10 @@ class networkTabularQAgent(object):
     #self.nlinks = nlinks
     self.n_actions = nlinks[self.n]
     self.n_features = n_features
-    self.ep_obs, self.ep_as, self.ep_rs = [], [], []
-    self.ep_obs_temp, self.ep_as_temp = [], []
+    self.ep_obs, self.ep_as, self.ep_rs = ([],)*3
+    # self.ep_obs, self.ep_as, self.ep_rs = [], [], []
+    self.ep_obs_temp, self.ep_as_temp = ([],)*2
+    # self.ep_obs_temp, self.ep_as_temp = [], []
     self.lr = learning_rate   #learning_rate
 
 
