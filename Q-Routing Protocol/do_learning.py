@@ -5,7 +5,6 @@ from sys import argv
 
 
 def main():
-    # ?edasd
     test_file = argv[1]
     d = {}
     with open(test_file, 'r') as f:
