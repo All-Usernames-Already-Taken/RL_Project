@@ -1,15 +1,15 @@
-file name: test1
-time steps: 2001
+file_name: test1
+time_steps: 2001
 iterations: 2000
-number layers: 3
-layer type: first, middle, last
-layer size: 40, 20, 13
+number_layers: 3
+layer_types: first, middle, last
+layer_sizes: 40, 20, 13
 mean_value: 0, 0, 0
 std_val: 0.1, 0.1, 0.1
 constant_val: 1,1,1
 dumps: 50
-arrival: 5
-learning rate: .001
+arrival_rate: 5
+learning_rate: .001
 resources_bbu: 30
 resources_edge: 10
 cost: 100
