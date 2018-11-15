@@ -1,64 +1,69 @@
 import numpy as np
 from envs.simulator import NetworkSimulatorEnv
 from agents.q_agent import networkTabularQAgent
-import sys
+from sys import argv
 
 
 def main():
     ##
+    test_file = argv[1]
+    with open(test_file) as infile:
+        my_text = infile.readlines()
+        # my_text = my_text.replace("\n", "")
+        for line in my_text:
+            print(line.replace("\n", ""))
 
-    test_file = sys.argv[1]
-    inputfile = open(test_file)
-    my_text = inputfile.readlines()
-    timesteps = int(my_text[1].replace("\n", "").split(":")[1])
-    iterations = int(my_text[2].replace("\n", "").split(":")[1])
-    num_layers = int(my_text[3].replace("\n", "").split(":")[1])
-    layer_types0 = my_text[4].replace("\n", "").split(":")[1]
-    layer_types = layer_types0.replace(" ", "").split(",")
-    layer_sizes0 = my_text[5].replace("\n", "").split(":")[1]
-    layer_sizes = layer_sizes0.split(",")
-    for i in range(len(layer_sizes)):
-        layer_sizes[i] = int(layer_sizes[i])
-    mean_val0 = my_text[6].replace("\n", "").split(":")[1]
-    mean_val = mean_val0.split(",")
-    for i in range(len(mean_val)):
-        mean_val[i] = float(mean_val[i])
-    std_val0 = my_text[7].replace("\n", "").split(":")[1]
-    std_val = std_val0.split(",")
-    for i in range(len(std_val)):
-        std_val[i] = float(std_val[i])
-    constant_val0 = my_text[8].replace("\n", "").split(":")[1]
-    constant_val = constant_val0.split(",")
-    for i in range(len(constant_val)):
-        constant_val[i] = float(constant_val[i])
-    dumps = int(my_text[9].replace("\n", "").split(":")[1])
-    arrival_rate = int(my_text[10].replace("\n", "").split(":")[1])
-    learning_rate = float(my_text[11].replace("\n", "").split(":")[1])
-    resources_bbu = int(my_text[12].replace("\n", "").split(":")[1])
-    resources_edge = int(my_text[13].replace("\n", "").split(":")[1])
-    cost = int(my_text[14].replace("\n", "").split(":")[1])
-    act_func0 = my_text[15].replace("\n", "").split(":")[1]
-    act_func = act_func0.split(",")
-    for i in range(len(act_func)):
-        act_func[i] = int(act_func[i])
+    # inputfile = open(test_file)
+    # my_text = inputfile.readlines()
+    # timesteps = int(my_text[1].replace("\n", "").split(":")[1])
+    # iterations = int(my_text[2].replace("\n", "").split(":")[1])
+    # num_layers = int(my_text[3].replace("\n", "").split(":")[1])
+    # layer_types0 = my_text[4].replace("\n", "").split(":")[1]
+    # layer_types = layer_types0.replace(" ", "").split(",")
+    # layer_sizes0 = my_text[5].replace("\n", "").split(":")[1]
+    # layer_sizes = layer_sizes0.split(",")
+    # for i in range(len(layer_sizes)):
+    #     layer_sizes[i] = int(layer_sizes[i])
+    # mean_val0 = my_text[6].replace("\n", "").split(":")[1]
+    # mean_val = mean_val0.split(",")
+    # for i in range(len(mean_val)):
+    #     mean_val[i] = float(mean_val[i])
+    # std_val0 = my_text[7].replace("\n", "").split(":")[1]
+    # std_val = std_val0.split(",")
+    # for i in range(len(std_val)):
+    #     std_val[i] = float(std_val[i])
+    # constant_val0 = my_text[8].replace("\n", "").split(":")[1]
+    # constant_val = constant_val0.split(",")
+    # for i in range(len(constant_val)):
+    #     constant_val[i] = float(constant_val[i])
+    # dumps = int(my_text[9].replace("\n", "").split(":")[1])
+    # arrival_rate = int(my_text[10].replace("\n", "").split(":")[1])
+    # learning_rate = float(my_text[11].replace("\n", "").split(":")[1])
+    # resources_bbu = int(my_text[12].replace("\n", "").split(":")[1])
+    # resources_edge = int(my_text[13].replace("\n", "").split(":")[1])
+    # cost = int(my_text[14].replace("\n", "").split(":")[1])
+    # act_func0 = my_text[15].replace("\n", "").split(":")[1]
+    # act_func = act_func0.split(",")
+    # for i in range(len(act_func)):
+    #     act_func[i] = int(act_func[i])
 
     # In[180]:
 
-    print("Timesteps: %s " % str(timesteps))  # check
-    print("Iterations: %s " % str(iterations))  # check
-    print("Number Layers: %s " % str(num_layers))
-    print("layer_types: %s " % str(layer_types))
-    print("mean_val: %s " % str(mean_val))
-    print("std_val: %s " % str(std_val))
-    print("constant_val: %s " % str(constant_val))
-    print("layer_sizes: %s " % str(layer_sizes))
-    print("dumps: %s" % str(dumps))  # check
-    print("arrival_rate: %s" % str(arrival_rate))  # check
-    print("learning_rate: %s" % str(learning_rate))
-    print("resources_bbu: %s" % str(resources_bbu))  # check
-    print("resources_edge: %s" % str(resources_edge))  # check
-    print("cost: %s" % str(cost))
-    print("act: %s" % str(act_func))  # check
+    # print("Timesteps: %s " % str(timesteps))  # check
+    # print("Iterations: %s " % str(iterations))  # check
+    # print("Number Layers: %s " % str(num_layers))
+    # print("layer_types: %s " % str(layer_types))
+    # print("mean_val: %s " % str(mean_val))
+    # print("std_val: %s " % str(std_val))
+    # print("constant_val: %s " % str(constant_val))
+    # print("layer_sizes: %s " % str(layer_sizes))
+    # print("dumps: %s" % str(dumps))  # check
+    # print("arrival_rate: %s" % str(arrival_rate))  # check
+    # print("learning_rate: %s" % str(learning_rate))
+    # print("resources_bbu: %s" % str(resources_bbu))  # check
+    # print("resources_edge: %s" % str(resources_edge))  # check
+    # print("cost: %s" % str(cost))
+    # print("act: %s" % str(act_func))  # check
     # set seeds and finish imports
 
     ##

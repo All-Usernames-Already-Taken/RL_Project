@@ -1,11 +1,9 @@
 import gym
-import numpy as np
-import heapq
+from numpy import zeros
+from heapq import heappush, heappop
 from collections import defaultdict
-from os import path
-from os import sys
-import math
-import random
+from math import log as mlog
+from random import random
 
 try:
     import Queue as Q  # ver. < 3.0
@@ -78,8 +76,8 @@ class NetworkSimulatorEnv(gym.Env):
         self.edge_limit = 0
         self.cost = 0
 
-        self.distance = []  # np.zeros((self.nnodes,self.nnodes))
-        self.shortest = []  # np.zeros((self.nnodes,self.nnodes))
+        self.distance = []  # zeros((self.nnodes,self.nnodes))
+        self.shortest = []  # zeros((self.nnodes,self.nnodes))
 
         self.next_dest = 0
         self.next_source = 0
@@ -151,7 +149,7 @@ class NetworkSimulatorEnv(gym.Env):
                 ###
 
                 ##cg: add event to system for when the item is suppose to leave
-                heapq.heappush(self.event_queue, ((current_time + current_event.lifetime, -self.events), current_event))
+                heappush(self.event_queue, ((current_time + current_event.lifetime, -self.events), current_event))
 
                 ##
                 self.current_event = self.get_new_packet_bump()
@@ -178,7 +176,7 @@ class NetworkSimulatorEnv(gym.Env):
 
                 # current_event.qtime = current_time
                 self.events += 1
-                heapq.heappush(self.event_queue, ((current_time, -self.events), current_event))
+                heappush(self.event_queue, ((current_time, -self.events), current_event))
                 self.current_event = self.get_new_packet_bump()
 
                 if self.current_event == NIL:
@@ -190,8 +188,8 @@ class NetworkSimulatorEnv(gym.Env):
 
     def _reset(self):
         self.readin_graph()
-        self.distance = np.zeros((self.nnodes, self.nnodes))
-        self.shortest = np.zeros((self.nnodes, self.nnodes))
+        self.distance = zeros((self.nnodes, self.nnodes))
+        self.shortest = zeros((self.nnodes, self.nnodes))
         self.compute_best()
         self.done = False
         self.interqueuen = [self.interqueue] * self.nnodes
@@ -211,12 +209,12 @@ class NetworkSimulatorEnv(gym.Env):
             inject_event.source = INJECT
             # Call mean is the lambda parameter of the poisson distribution
             if self.callmean == 1.0:
-                inject_event.etime = -math.log(random.random())
+                inject_event.etime = -mlog(random())
             else:
-                inject_event.etime = -math.log(1 - random.random()) * float(self.callmean)
+                inject_event.etime = -mlog(1 - random()) * float(self.callmean)
 
             inject_event.qtime = 0.0
-            heapq.heappush(self.event_queue, ((inject_event.etime, -self.events), inject_event))
+            heappush(self.event_queue, ((inject_event.etime, -self.events), inject_event))
             self.injections += 1
             self.events += 1
 
@@ -273,7 +271,7 @@ class NetworkSimulatorEnv(gym.Env):
 
     def get_new_packet_bump(self):
         # cg:needs to get updated
-        current_event = heapq.heappop(self.event_queue)[1]
+        current_event = heappop(self.event_queue)[1]
         while current_event.dest >= 0:
             # add resources back
             resources_add_back = current_event.resources
@@ -284,7 +282,7 @@ class NetworkSimulatorEnv(gym.Env):
             d = current_event.dest
             self.resources_bbu[self.dests.index(d)] += 1
             # get new item from queue
-            current_event = heapq.heappop(self.event_queue)[1]
+            current_event = heappop(self.event_queue)[1]
             # self.current_event = self.get_new_packet_bump()
 
         current_time = current_event.etime
@@ -293,22 +291,22 @@ class NetworkSimulatorEnv(gym.Env):
         while current_event.source == INJECT:
             # cg: edit e_time of packet to decide when next packet of that type will enter system
             if self.callmean == 1.0 or self.callmean == 0.0:
-                current_event.etime += -math.log(1 - random.random())
+                current_event.etime += -mlog(1 - random())
             else:
-                current_event.etime += -math.log(1 - random.random()) * float(self.callmean)
+                current_event.etime += -mlog(1 - random()) * float(self.callmean)
 
             # current_event.qtime = current_time  #cg:do i need this???
             current_event.qtime = 0
-            heapq.heappush(self.event_queue, ((current_event.etime, -self.events), current_event))
+            heappush(self.event_queue, ((current_event.etime, -self.events), current_event))
             self.events += 1
             self.injections += 1
             # cg: packet enters system at this time
             current_event = self.start_packet(current_time, src)
             if current_event == NIL:
-                current_event = heapq.heappop(self.event_queue)[1]
+                current_event = heappop(self.event_queue)[1]
 
         if current_event == NIL:
-            current_event = heapq.heappop(self.event_queue)[1]
+            current_event = heappop(self.event_queue)[1]
         return current_event
 
     def calculate_reward(self):
@@ -329,7 +327,7 @@ class NetworkSimulatorEnv(gym.Env):
         # current_event
         # add (source,action) to history of path
         # current_event.hist
-        heapq.heappush(self.event_queue, ((current_time + current_event.lifetime, -self.events), current_event))
+        heappush(self.event_queue, ((current_time + current_event.lifetime, -self.events), current_event))
 
     def compute_best(self):
         changing = True

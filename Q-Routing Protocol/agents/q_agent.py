@@ -1,6 +1,4 @@
-import collections
 import numpy as np
-from random import random
 import tensorflow as tf
 
 
