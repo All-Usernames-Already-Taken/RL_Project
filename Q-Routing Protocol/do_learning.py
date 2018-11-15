@@ -5,7 +5,7 @@ from sys import argv
 
 
 def main():
-
+    # ?
     test_file = argv[1]
     d = {}
     with open(test_file, 'r') as f:
