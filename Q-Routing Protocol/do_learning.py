@@ -16,7 +16,6 @@ def main():
             k, v = k.strip(), v.strip()
             v = v.split(',')
             v = [v[i].strip() for i in range(len(v))]
-            # Extracted parameters expected to be str, int, or float
             for j in range(len(v)):
                 try:
                     v[j] = int(v[j])
@@ -50,8 +49,8 @@ def main():
     callmean = arrival_rate
 
     # callmean += 0
-
     env = NetworkSimulatorEnv()
+    env.reset()
     env.callmean = callmean
     env.bbu_limit = resources_bbu
     env.edge_limit = resources_edge
@@ -59,8 +58,8 @@ def main():
 
     # cg: set up agents for every node
     n_features = len(env.resources_bbu + env.resources_edges)
-
     for i in range(0, env.nnodes):
+
         # agent_list.append(
         #     networkTabularQAgent(
         #         env.nnodes,
@@ -110,7 +109,7 @@ def main():
                 n = current_state[0]
 
                 # dest = current_state[1]
-                ## cg: dont need next 3 lines, go directly to act
+                # cg: dont need next 3 lines, go directly to act
                 # for action in xrange(env.nlinks[n]):
                 #    reward, next_state = env.pseudostep(action)
                 #    agent.learn(
@@ -162,7 +161,7 @@ def main():
                     agent_list[j].learn5(i)
 
         # Record statistics from iteration
-        # routed_packets, send fails, average number of hops, average completion time, max completion time)
+        # (routed_packets, send fails, average number of hops, average completion time, max completion time)
         # Learn/backpropagation
 
     pred_file = 'predictions' + test_file.split('.txt')[0]
@@ -170,14 +169,11 @@ def main():
     with open(pred_file, 'wb') as outfile:
 
         # outfile.write('# Array shape: {0}\n'.format(data.shape))
+        # Iterating through n-D array produces slices along the last axis.
+        # Here, data[i,:,:] is equivalent
 
-        # Iterating through n-D array produces slices along the last axis. Here, data[i,:,:] is equivalent
         for data_slice in data:
-            np.savetxt(
-                outfile,
-                data_slice[np.newaxis],
-                fmt='%-7.2f',
-                delimiter=',')
+            np.savetxt(outfile, data_slice[np.newaxis], fmt='%-7.2f', delimiter=',')
 
             # Writing out a break to indicate different slices...
             # outfile.write('# New slice\n')
@@ -185,3 +181,5 @@ def main():
 
 if __name__ == '__main__':
     main()
+
+# HELLO THERE!!!!

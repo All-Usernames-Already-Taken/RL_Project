@@ -26,8 +26,10 @@ class event:
         self.hops = 0
         self.etime = time
         self.qtime = 0
+
         # cg: need to add status for lifetime in bbu site,
         # need to add status for path taken, and which bbu resource used
+
         self.resources = []
         self.lifetime = 10
 
@@ -44,7 +46,6 @@ NIL = Nil = -1
 
 class NetworkSimulatorEnv(gym.Env):
 
-    # We init the network simulator here
     def __init__(self):
         self.viewer = None
         self.graphname = 'data/graph1.txt'
