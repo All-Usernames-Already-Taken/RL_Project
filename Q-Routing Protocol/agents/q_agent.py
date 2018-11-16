@@ -2,13 +2,30 @@ import numpy as np
 import tensorflow as tf
 
 
-class networkTabularQAgent(object):
+class NetworkTabularQAgent(object):
     """
     Agent implementing tabular Q-learning for the NetworkSimulatorEnv.
     """
 
-    def __init__(self, num_nodes, num_actions, node, nlinks, links, link_num, dests, n_features, learning_rate,
-                 num_layers, layer_size, layer_type, mean_val, std_val, constant_val, activation_type):
+    def __init__(
+            self,
+            num_nodes,
+            num_actions,
+            node,
+            n_links,
+            links,
+            link_num,
+            destinations,
+            n_features,
+            learning_rate,
+            num_layers,
+            layer_size,
+            layer_type,
+            mean_val,
+            std_val,
+            constant_val,
+            activation_type):
+
         # cg: reset configuration for each node in the graph
         self.config = {
             "init_mean": 0.0,  # Initialize Q values with this mean
@@ -17,18 +34,22 @@ class networkTabularQAgent(object):
             "eps": 0.1,  # Epsilon in epsilon greedy policies
             "discount": 1,
             "n_iter": 10000000}  # Number of iterations
+
         # self.q = np.zeros((num_nodes,num_nodes,num_actions))
         self.hist_resources = []
         self.hist_action = []
         self.n = node
         self.links = links
         self.link_num = link_num
-        self.dests = dests
-        # self.nlinks=nlinks
-        self.n_actions = nlinks[self.n]
+        self.destinations = destinations
+        # self.n_links = n_links
+        self.n_actions = n_links[self.n]
         self.n_features = n_features
-        self.ep_obs, self.ep_as, self.ep_rs = [], [], []
-        self.ep_obs_temp, self.ep_as_temp = [], []
+        self.ep_obs = []
+        self.ep_as = []
+        self.ep_rs = []
+        self.ep_obs_temp = []
+        self.ep_as_temp = []
         self.lr = learning_rate  # learning_rate
 
         self.sess = tf.Session()
@@ -267,8 +288,8 @@ class networkTabularQAgent(object):
                 # self.store_transition_temp(resources_edges+resources_bbu,action)
                 next_node = self.links[self.n][action]
                 l_num = self.link_num[self.n][action]
-                if next_node in self.dests:
-                    if resources_bbu[self.dests.index(next_node)] == 0:
+                if next_node in self.destinations:
+                    if resources_bbu[self.destinations.index(next_node)] == 0:
                         flag = 1
                         valid[action] = 0
                     else:
@@ -293,8 +314,8 @@ class networkTabularQAgent(object):
         l_num = self.link_num[self.n][action]
         if resources_edges[self.link_num[self.n][action]] == 0:
             action = -1
-        elif next_node in self.dests:
-            if resources_bbu[self.dests.index(next_node)] == 0:
+        elif next_node in self.destinations:
+            if resources_bbu[self.destinations.index(next_node)] == 0:
                 action = -1
         return action
 

@@ -12,13 +12,12 @@ except ImportError:
 
 events = 0
 
-
 # based on code: https://github.com/Duncanswilson/q-routing-protocol
+
 # /* Event structure. */
 class event:
     # event is a packet?
     def __init__(self, time, src):
-        # /* Initialize new event. */
         self.dest = UNKNOWN
         self.source = UNKNOWN
         self.node = src
@@ -27,8 +26,8 @@ class event:
         self.etime = time
         self.qtime = 0
 
-        # cg: need to add status for lifetime in bbu site,
-        # need to add status for path taken, and which bbu resource used
+        # ?! --> cg: need to add status for lifetime in bbu site,
+        # ?! -->need to add status for path taken, and which bbu resource used
 
         self.resources = []
         self.lifetime = 10
@@ -47,39 +46,37 @@ NIL = Nil = -1
 class NetworkSimulatorEnv(gym.Env):
 
     def __init__(self):
+
         self.viewer = None
-        self.graphname = 'data/graph1.txt'
+        self.graph_name = 'data/graph1.txt'
         self.done = False
-        self.success_count = 0
-        self.nnodes = 0
-        self.nedges = 0
-        self.enqueued = {}
-        self.nenqueued = {}
-        self.interqueuen = []
-        self.event_queue = []  # Q.PriorityQueue()
-        self.history_queue = []
-        self.nlinks = {}
-        self.links = defaultdict(dict)
-        self.link_num = defaultdict(dict)
         self.total_routing_time = 0.0
+        self.success_count = 0
         self.routed_packets = 0
-        self.total_hops = 0
-        self.current_event = event(0.0, 0)  # do I need to do this?
-        self.internode = 1.0
-        self.interqueue = 1.0
         self.active_packets = 0
-        self.queuelimit = 100
         self.send_fail = 0
+        self.total_hops = 0
+        self.n_nodes = 0
+        self.n_edges = 0
+        self.queue_limit = 100
+        self.n_enqueued = {}
+        self.enqueued = {}
+        self.total_local_connections = {}
+        self.inter_queue_n = []
         self.history_queue = []
-        #
-        self.callmean = 5  # network load
+        self.inter_node = 1.0
+        self.inter_queue = 1.0
+        self.history_queue = []
+        self.event_queue = []  # Q.PriorityQueue()
+        self.links = defaultdict(dict)
+        self.abs_link_id = defaultdict(dict)
+        self.current_event = event(0.0, 0)  # do I need to do this?
+        self.call_mean = 5  # network load
         self.bbu_limit = 0
         self.edge_limit = 0
         self.cost = 0
-
-        self.distance = []  # zeros((self.nnodes,self.nnodes))
-        self.shortest = []  # zeros((self.nnodes,self.nnodes))
-
+        self.distance = []  # zeros((self.n_nodes,self.n_nodes))
+        self.shortest = []  # zeros((self.n_nodes,self.n_nodes))
         self.next_dest = 0
         self.next_source = 0
         self.injections = 0
@@ -91,7 +88,7 @@ class NetworkSimulatorEnv(gym.Env):
         self.sources = [0, 1, 2, 6, 7, 8]
 
         # Nodes connected to BBU pools
-        self.dests = [3, 5]
+        self.destinations = [3, 5]
 
         # self.next_source = 0
         # self.next_dest = 0
@@ -112,7 +109,7 @@ class NetworkSimulatorEnv(gym.Env):
             if resources_add_back:
                 for i in resources_add_back:
                     src, act = i
-                    l_num = self.link_num[src][act]
+                    l_num = self.abs_link_id[src][act]
                     self.resources_edges[l_num] += 1
 
             self.current_event = self.get_new_packet_bump()
@@ -126,18 +123,18 @@ class NetworkSimulatorEnv(gym.Env):
 
         else:
             next_node = self.links[current_node][action]
-            l_num = self.link_num[current_node][action]
+            l_num = self.abs_link_id[current_node][action]
             self.resources_edges[l_num] += -1
             current_event.hops += 1
             current_event.resources.append((current_node, action))
             # need to check link valid if in dest or not in destination
             # handle the case where next_node is your destination
-            if next_node in self.dests:
+            if next_node in self.destinations:
                 # cg: next node is one of bbu units
                 # cg: check if there are enough resources at that destination
                 # self.resources_edges[l_num]+=-1
                 current_event.node = next_node  # do the send!
-                self.resources_bbu[self.dests.index(next_node)] -= 1
+                self.resources_bbu[self.destinations.index(next_node)] -= 1
                 self.routed_packets += 1
                 self.active_packets -= 1
                 # cg: need to add deletion to event queue
@@ -189,30 +186,30 @@ class NetworkSimulatorEnv(gym.Env):
 
     def _reset(self):
         self.readin_graph()
-        self.distance = zeros((self.nnodes, self.nnodes))
-        self.shortest = zeros((self.nnodes, self.nnodes))
+        self.distance = zeros((self.n_nodes, self.n_nodes))
+        self.shortest = zeros((self.n_nodes, self.n_nodes))
         self.compute_best()
         self.done = False
-        self.interqueuen = [self.interqueue] * self.nnodes
+        self.inter_queue_n = [self.inter_queue] * self.n_nodes
 
         self.event_queue = []  # Q.PriorityQueue()
         self.total_routing_time = 0.0
 
-        self.enqueued = [0.0] * self.nnodes
-        self.nenqueued = [0] * self.nnodes
+        self.enqueued = [0.0] * self.n_nodes
+        self.n_enqueued = [0] * self.n_nodes
         self.send_fail = 0
         self.history_queue = []
-        self.resources_edges = [self.edge_limit] * self.nedges
-        self.resources_bbu = [self.bbu_limit] * len(self.dests)
+        self.resources_edges = [self.edge_limit] * self.n_edges
+        self.resources_bbu = [self.bbu_limit] * len(self.destinations)
         self.events = 1
         for i in self.sources:
             inject_event = event(0.0, i)
             inject_event.source = INJECT
             # Call mean is the lambda parameter of the poisson distribution
-            if self.callmean == 1.0:
+            if self.call_mean == 1.0:
                 inject_event.etime = -mlog(random())
             else:
-                inject_event.etime = -mlog(1 - random()) * float(self.callmean)
+                inject_event.etime = -mlog(1 - random()) * float(self.call_mean)
 
             inject_event.qtime = 0.0
             heappush(self.event_queue, ((inject_event.etime, -self.events), inject_event))
@@ -226,18 +223,18 @@ class NetworkSimulatorEnv(gym.Env):
     ###########helper functions############################
     # Initializes a packet from a random source to a random destination
     def readin_graph(self):
-        self.nnodes = 0
-        self.nedges = 0
+        self.n_nodes = 0
+        self.n_edges = 0
 
-        graph_file = open(self.graphname, "r")
+        graph_file = open(self.graph_name, "r")
 
         for line in graph_file:
             line_contents = line.split()
 
             if line_contents[0] == '1000':  # node declaration
 
-                self.nlinks[self.nnodes] = 0
-                self.nnodes = self.nnodes + 1
+                self.total_local_connections[self.n_nodes] = 0
+                self.n_nodes = self.n_nodes + 1
 
             if line_contents[0] == '2000':  # link declaration
 
@@ -245,17 +242,16 @@ class NetworkSimulatorEnv(gym.Env):
                 node2 = int(line_contents[2])
 
                 # link_num gives way to access global identifier for local links
-                # nlinks is total number of links for a given node
                 # links tells what nodes a node links to
-                self.links[node1][self.nlinks[node1]] = node2
-                self.link_num[node1][self.nlinks[node1]] = self.nedges
-                self.nlinks[node1] = self.nlinks[node1] + 1
+                self.links[node1][self.total_local_connections[node1]] = node2
+                self.abs_link_id[node1][self.total_local_connections[node1]] = self.n_edges
+                self.total_local_connections[node1] = self.total_local_connections[node1] + 1
 
-                self.links[node2][self.nlinks[node2]] = node1
-                self.link_num[node2][self.nlinks[node2]] = self.nedges
-                self.nlinks[node2] = self.nlinks[node2] + 1
+                self.links[node2][self.total_local_connections[node2]] = node1
+                self.abs_link_id[node2][self.total_local_connections[node2]] = self.n_edges
+                self.total_local_connections[node2] = self.total_local_connections[node2] + 1
 
-                self.nedges = self.nedges + 1
+                self.n_edges = self.n_edges + 1
 
     def reset_history(self):
         self.send_fail = 0
@@ -278,10 +274,10 @@ class NetworkSimulatorEnv(gym.Env):
             resources_add_back = current_event.resources
             for i in resources_add_back:
                 src, act = i
-                l_num = self.link_num[src][act]
+                l_num = self.abs_link_id[src][act]
                 self.resources_edges[l_num] += 1
             d = current_event.dest
-            self.resources_bbu[self.dests.index(d)] += 1
+            self.resources_bbu[self.destinations.index(d)] += 1
             # get new item from queue
             current_event = heappop(self.event_queue)[1]
             # self.current_event = self.get_new_packet_bump()
@@ -291,10 +287,10 @@ class NetworkSimulatorEnv(gym.Env):
         # make sure the event we're sending the state of back is not an injection
         while current_event.source == INJECT:
             # cg: edit e_time of packet to decide when next packet of that type will enter system
-            if self.callmean == 1.0 or self.callmean == 0.0:
+            if self.call_mean == 1.0 or self.call_mean == 0.0:
                 current_event.etime += -mlog(1 - random())
             else:
-                current_event.etime += -mlog(1 - random()) * float(self.callmean)
+                current_event.etime += -mlog(1 - random()) * float(self.call_mean)
 
             # current_event.qtime = current_time  #cg:do i need this???
             current_event.qtime = 0
@@ -332,21 +328,21 @@ class NetworkSimulatorEnv(gym.Env):
 
     def compute_best(self):
         changing = True
-        for i in range(self.nnodes):
-            for j in range(self.nnodes):
+        for i in range(self.n_nodes):
+            for j in range(self.n_nodes):
                 if i == j:
                     self.distance[i][j] = 0
                 else:
-                    self.distance[i][j] = self.nnodes + 1
+                    self.distance[i][j] = self.n_nodes + 1
                 self.shortest[i][j] = -1
 
         while changing:
             changing = False
-            for i in range(self.nnodes):
-                for j in range(self.nnodes):
+            for i in range(self.n_nodes):
+                for j in range(self.n_nodes):
                     # /* Update our estimate of distance for sending from i to j. */
                     if i != j:
-                        for k in range(self.nlinks[i]):
+                        for k in range(self.total_local_connections[i]):
                             if self.distance[i][j] > 1 + self.distance[self.links[i][k]][j]:
                                 self.distance[i][j] = 1 + self.distance[self.links[i][k]][j]  # /* Better. */
                                 self.shortest[i][j] = k

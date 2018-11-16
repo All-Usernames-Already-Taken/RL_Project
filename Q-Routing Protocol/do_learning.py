@@ -1,10 +1,11 @@
 import numpy as np
 from envs.simulator import NetworkSimulatorEnv
-from agents.q_agent import networkTabularQAgent
+from agents.q_agent import NetworkTabularQAgent
 from sys import argv
 
 
 def main():
+
     test_file = argv[1]
     d = {}
     with open(test_file, 'r') as f:
@@ -26,7 +27,7 @@ def main():
                     pass
             d.setdefault(k, v)
 
-    timesteps = d['time_steps'][0]
+    time_steps = d['time_steps'][0]
     iterations = d['iterations'][0]
     num_layers = d['number_layers'][0]
     layer_types = d['layer_types']
@@ -45,36 +46,36 @@ def main():
     data, r_hist, agent_list = ([],) * 3
 
     # Poisson distributed network model
-    callmean = arrival_rate
+    call_mean = arrival_rate
 
-    # callmean += 0
+    # call_mean += 0
     env = NetworkSimulatorEnv()
     env.reset()
-    env.callmean = callmean
+    env.call_mean = call_mean
     env.bbu_limit = resources_bbu
     env.edge_limit = resources_edge
     env.cost = cost
 
     # cg: set up agents for every node
     n_features = len(env.resources_bbu + env.resources_edges)
-    for i in range(0, env.nnodes):
+    for i in range(0, env.n_nodes):
 
         # agent_list.append(
-        #     networkTabularQAgent(
+        #     NetworkTabularQAgent(
         #         env.nnodes,
         #         env.nedges,
         #         env.distance,
         #         env.nlinks))
 
         agent_list.append(
-            networkTabularQAgent(
-                env.nnodes,
-                env.nedges,
+            NetworkTabularQAgent(
+                env.n_nodes,
+                env.n_edges,
                 i,
-                env.nlinks,
+                env.total_local_connections,
                 env.links,
-                env.link_num,
-                env.dests,
+                env.abs_link_id,
+                env.destinations,
                 n_features,
                 learning_rate,
                 num_layers,
@@ -85,9 +86,9 @@ def main():
                 constant_val,
                 act_func))
 
-        # num_nodes, num_actions, node, nlinks,links, link_num, dests, n_features)
+        # num_nodes, num_actions, node, nlinks,links, link_num, destinations, n_features)
     # config = agent_list[i].config
-    # agent = networkTabularQAgent(
+    # agent = NetworkTabularQAgent(
     #     env.nnodes,
     #     env.nedges,
     #     env.distance,
@@ -96,13 +97,13 @@ def main():
     done = False
     for i in range(iterations):
 
-        # callmean += 0
+        # call_mean += 0
         # env = NetworkSimulatorEnv()
         # r_sum_random = r_sum_best = 0
 
         state_pair = env.reset()
 
-        for t in range(timesteps):
+        for t in range(time_steps):
             if not done:
                 current_state = state_pair[1]
                 n = current_state[0]
@@ -127,7 +128,7 @@ def main():
                 #         env.resources_edges,
                 #         env.resources_bbu,
                 #         env.link_num,
-                #         env.dests)
+                #         env.destinations)
 
                 action = agent_list[n].act_nn2(env.resources_edges, env.resources_bbu)
                 state_pair, done = env.step(action)
@@ -148,14 +149,14 @@ def main():
                     env.reset_history()
 
                     # calculate loss
-                    for j in range(0, env.nnodes):
-                        if j not in env.dests:
+                    for j in range(0, env.n_nodes):
+                        if j not in env.destinations:
                             agent_list[j].store_transition_episode(r)
 
         if i % 1 == 0:
             print("learning")
-            for j in range(0, env.nnodes):
-                if j not in env.dests:
+            for j in range(0, env.n_nodes):
+                if j not in env.destinations:
                     print(j)
                     agent_list[j].learn5(i)
 
