@@ -61,13 +61,6 @@ def main():
     n_features = len(env.resources_bbu + env.resources_edges)
     for i in range(0, env.total_nodes):
 
-        # agent_list.append(
-        #     NetworkTabularQAgent(
-        #         env.nnodes,
-        #         env.nedges,
-        #         env.distance,
-        #         env.nlinks))
-
         agent_list.append(
             NetworkTabularQAgent(
                 env.total_nodes,
@@ -90,10 +83,6 @@ def main():
     done = False
     for i in range(iterations):
 
-        # call_mean += 0
-        # env = NetworkSimulatorEnv()
-        # r_sum_random = r_sum_best = 0
-
         state_pair = env.reset()
 
         for t in range(time_steps):
@@ -105,6 +94,7 @@ def main():
                 state_pair, done = env.step(action)
 
                 if t % dumps == 0 and t > 0:
+
                     print("iteration: {}\n"
                           "time: {}\n"
                           "send_fail: {}\n"
