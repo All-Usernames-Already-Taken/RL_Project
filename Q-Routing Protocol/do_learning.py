@@ -51,6 +51,7 @@ def main():
     # call_mean += 0
     env = NetworkSimulatorEnv()
     env.reset()
+
     env.call_mean = call_mean
     env.bbu_limit = resources_bbu
     env.edge_limit = resources_edge
@@ -100,32 +101,8 @@ def main():
                 current_state = state_pair[1]
                 n = current_state[0]
 
-                # dest = current_state[1]
-                # cg: dont need next 3 lines, go directly to act
-                # for action in xrange(env.nlinks[n]):
-                #    reward, next_state = env.pseudostep(action)
-                #    agent.learn(
-                #        current_state,
-                #        next_state,
-                #        reward,
-                #        action,
-                #        done,
-                #        env.nlinks)
-
-                # action  = \
-                #     agent_list[n].act(
-                #         current_state,
-                #         env.nlinks,
-                #         env.links,
-                #         env.resources_edges,
-                #         env.resources_bbu,
-                #         env.link_num,
-                #         env.destinations)
-
                 action = agent_list[n].act_nn2(env.resources_edges, env.resources_bbu)
                 state_pair, done = env.step(action)
-
-                # next_state = state_pair[0]
 
                 if t % dumps == 0 and t > 0:
                     print("iteration: {}\n"
