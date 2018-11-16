@@ -1,12 +1,12 @@
 # based on code: https://github.com/Duncanswilson/q-routing-protocol
 from abc import ABC
+from collections import defaultdict
+from heapq import heappush, heappop
+from math import log as mlog
+from random import random
 
 import gym
 from numpy import zeros
-from heapq import heappush, heappop
-from collections import defaultdict
-from math import log as mlog
-from random import random
 
 try:
     import Queue as Q  # ver. < 3.0
@@ -68,7 +68,7 @@ class NetworkSimulatorEnv(gym.Env, ABC):
         self.links = defaultdict(dict)
         self.abs_link_id = defaultdict(dict)
         self.current_event = Event(0.0, 0)  # do I need to do this?
-        self.call_mean = 5  # network load
+        self.call_mean = 5  # Network load
         self.bbu_limit = 0
         self.edge_limit = 0
         self.cost = 0
@@ -79,10 +79,8 @@ class NetworkSimulatorEnv(gym.Env, ABC):
         self.injections = 0
         self.queue_full = 0
         self.events = 0
-
-        # Nodes connected to RRHs and BBU pools respectively
-        self.sources = [0, 1, 2, 6, 7, 8]
-        self.destinations = [3, 5]
+        self.sources = [0, 1, 2, 6, 7, 8]  # Nodes connected to RRHs
+        self.destinations = [3, 5]  # Nodes connected to BBU pools respectively
 
     def _step(self, action):
         # if(self.total_routing_time/self.routed_packets < 10): #totally random, need change
@@ -262,8 +260,8 @@ class NetworkSimulatorEnv(gym.Env, ABC):
         # cg:needs to get updated
         current_event = heappop(self.event_queue)[1]
         while current_event.dest >= 0:
-            # add resources back
-            resources_add_back = current_event.resources
+            resources_add_back = current_event.resources  # Add resources back
+
             for i in resources_add_back:
                 src, act = i
                 l_num = self.abs_link_id[src][act]
@@ -300,6 +298,7 @@ class NetworkSimulatorEnv(gym.Env, ABC):
 
     def calculate_reward(self):
         reward = 0
+        # what is l?
         l = 0
         for i in self.history_queue:
             reward += -i[1]
@@ -310,7 +309,7 @@ class NetworkSimulatorEnv(gym.Env, ABC):
         return avg_reward
 
     def add_link_lifetime_event(self):
-        current_event.node = next_node  # do the send!
+        current_event.node = next_node  # Do the send!
         current_event.hops += 1
         current_event.source = -5
         # current_event

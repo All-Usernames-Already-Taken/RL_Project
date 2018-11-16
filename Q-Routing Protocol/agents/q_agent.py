@@ -24,7 +24,8 @@ class NetworkTabularQAgent(object):
             mean_val,
             std_val,
             constant_val,
-            activation_type):
+            activation_type
+    ):
 
         # cg: reset configuration for each node in the graph
         self.config = {
@@ -35,33 +36,39 @@ class NetworkTabularQAgent(object):
             "discount": 1,
             "n_iter": 10000000}  # Number of iterations
 
-        # self.q = np.zeros((num_nodes,num_nodes,num_actions))
-        self.hist_resources = []
-        self.hist_action = []
-        self.n = node
+        self.num_nodes = num_nodes
+        self.num_actions = num_actions
+        self.node = node
+        self.n_links = n_links
         self.links = links
         self.link_num = link_num
         self.destinations = destinations
-        # self.n_links = n_links
-        self.n_actions = n_links[self.n]
         self.n_features = n_features
+        self.lr = learning_rate
+        self.num_layers = num_layers
+        self.layer_type = layer_type
+        self.mean_val = mean_val
+        self.std_val = std_val
+        self.constant_val = constant_val
+        self.activation_type = activation_type
+
+        self.n_actions = n_links[self.node]
         self.ep_obs = []
         self.ep_as = []
         self.ep_rs = []
         self.ep_obs_temp = []
         self.ep_as_temp = []
-        self.lr = learning_rate  # learning_rate
+        self.hist_resources = []
+        self.hist_action = []
 
         self.sess = tf.Session()
-
-        observations = tf.placeholder(shape=[None, self.n_actions], dtype=tf.float32)
-        actions = tf.placeholder(shape=[None], dtype=tf.float32)
-        rewards = tf.placeholder(shape=[None], dtype=tf.float32)
-
-        # model
-        self._build_net()
-        # self._build_net_auto(num_layers,layer_size,layer_type,mean_val,std_val,constant_val,activation_type)
+        self._build_net()  # Model
         self.sess.run(tf.global_variables_initializer())
+
+        # observations = tf.placeholder(shape=[None, self.n_actions], dtype=tf.float32)
+        # actions = tf.placeholder(shape=[None], dtype=tf.float32)
+        # rewards = tf.placeholder(shape=[None], dtype=tf.float32)
+        # self._build_net_auto(num_layers,layer_size,layer_type,mean_val,std_val,constant_val,activation_type)
 
     def normalize_weights(self, x):
         """Compute softmax values for each sets of scores in x."""
@@ -194,13 +201,14 @@ class NetworkTabularQAgent(object):
         self.ep_as_temp.append(a)
 
     def store_transition_episode(self, r):
-        l = len(self.ep_as_temp)
-        for i in range(0, l):
+        duration = len(self.ep_as_temp)
+        for i in range(0, duration):
             self.store_transition(self.ep_obs_temp[i], self.ep_as_temp[i], r)
 
     def learn2(self):
-        l = len(self.ep_obs)
-        self.ep_obs = np.array(self.ep_obs).reshape(l, self.n_features)
+        duration = len(self.ep_obs)
+        # ?! --> is it duration though?
+        self.ep_obs = np.array(self.ep_obs).reshape(duration, self.n_features)
         self.sess.run(self.train_op, feed_dict={
             self.tf_obs: np.vstack(self.ep_obs),  # shape=[None, n_obs]
             self.tf_acts: np.array(self.ep_as),  # shape=[None, ]
@@ -210,8 +218,8 @@ class NetworkTabularQAgent(object):
         self.ep_obs, self.ep_as, self.ep_rs = [], [], []  # empty episode data
 
     def learn3(self, iter):
-        l = len(self.ep_obs)
-        self.ep_obs2 = np.array(self.ep_obs).reshape(l, self.n_features)
+        duration = len(self.ep_obs)
+        self.ep_obs2 = np.array(self.ep_obs).reshape(duration, self.n_features)
         discounted_ep_rs_norm = self._discount_and_norm_rewards()
         _, loss, log_probs, act_val, l1 = self.sess.run(
             [self.train_op, self.loss, self.neg_log_prob, self.all_act, self.layer], feed_dict={
@@ -270,7 +278,7 @@ class NetworkTabularQAgent(object):
         flag_e = 1
         flag_b = 1
         for i in range(0, self.n_actions):
-            if resources_edges[self.link_num[self.n][i]] > 0:
+            if resources_edges[self.link_num[self.node][i]] > 0:
                 flag_e = 0
                 valid[i] = 1
         for i in resources_bbu:
@@ -286,8 +294,8 @@ class NetworkTabularQAgent(object):
                 # action = int(np.random.choice(range(0, nlinks[n])))  #choose random action
                 action = self.choose_action(obs, valid)
                 # self.store_transition_temp(resources_edges+resources_bbu,action)
-                next_node = self.links[self.n][action]
-                l_num = self.link_num[self.n][action]
+                next_node = self.links[self.node][action]
+                l_num = self.link_num[self.node][action]
                 if next_node in self.destinations:
                     if resources_bbu[self.destinations.index(next_node)] == 0:
                         flag = 1
@@ -297,7 +305,7 @@ class NetworkTabularQAgent(object):
                 else:
                     flag = 0
 
-                if resources_edges[self.link_num[self.n][action]] == 0:
+                if resources_edges[self.link_num[self.node][action]] == 0:
                     flag = 1
 
         # self.hist_action.append((resources_edges+resources_bbu,action))
@@ -310,9 +318,9 @@ class NetworkTabularQAgent(object):
         obs = np.array(obs).reshape(1, self.n_features)
         action = self.choose_action2(obs)
         self.store_transition_temp(resources_edges + resources_bbu, action)
-        next_node = self.links[self.n][action]
-        l_num = self.link_num[self.n][action]
-        if resources_edges[self.link_num[self.n][action]] == 0:
+        next_node = self.links[self.node][action]
+        l_num = self.link_num[self.node][action]
+        if resources_edges[self.link_num[self.node][action]] == 0:
             action = -1
         elif next_node in self.destinations:
             if resources_bbu[self.destinations.index(next_node)] == 0:
