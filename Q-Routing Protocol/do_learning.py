@@ -58,7 +58,7 @@ def main():
 
     # cg: set up agents for every node
     n_features = len(env.resources_bbu + env.resources_edges)
-    for i in range(0, env.n_nodes):
+    for i in range(0, env.total_nodes):
 
         # agent_list.append(
         #     NetworkTabularQAgent(
@@ -69,8 +69,8 @@ def main():
 
         agent_list.append(
             NetworkTabularQAgent(
-                env.n_nodes,
-                env.n_edges,
+                env.total_nodes,
+                env.total_edges,
                 i,
                 env.total_local_connections,
                 env.links,
@@ -85,14 +85,6 @@ def main():
                 std_val,
                 constant_val,
                 act_func))
-
-        # num_nodes, num_actions, node, nlinks,links, link_num, destinations, n_features)
-    # config = agent_list[i].config
-    # agent = NetworkTabularQAgent(
-    #     env.nnodes,
-    #     env.nedges,
-    #     env.distance,
-    #     env.nlinks)
 
     done = False
     for i in range(iterations):
@@ -149,13 +141,13 @@ def main():
                     env.reset_history()
 
                     # calculate loss
-                    for j in range(0, env.n_nodes):
+                    for j in range(0, env.total_nodes):
                         if j not in env.destinations:
                             agent_list[j].store_transition_episode(r)
 
         if i % 1 == 0:
             print("learning")
-            for j in range(0, env.n_nodes):
+            for j in range(0, env.total_nodes):
                 if j not in env.destinations:
                     print(j)
                     agent_list[j].learn5(i)

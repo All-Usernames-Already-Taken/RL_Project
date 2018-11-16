@@ -119,8 +119,8 @@ class NetworkTabularQAgent(object):
         self.all_act_prob = tf.nn.softmax(self.all_act)  # use softmax to convert to probability
 
         with tf.name_scope('loss'):
-            self.neg_log_prob = tf.reduce_sum(-tf.log(self.all_act_prob) * tf.one_hot(self.tf_acts, self.n_actions),
-                                              axis=1)
+            self.neg_log_prob = tf.reduce_sum(
+                -tf.log(self.all_act_prob) * tf.one_hot(self.tf_acts, self.n_actions), axis=1)
             self.loss = tf.reduce_mean(self.neg_log_prob * self.tf_vt)  # reward guided loss
             print("help")
         with tf.name_scope('train'):
