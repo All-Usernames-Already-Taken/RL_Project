@@ -80,7 +80,7 @@ class NetworkSimulatorEnv(gym.Env, ABC):
         self.queue_full = 0
         self.events = 0
 
-        # Nodes connected to RRHs, and BBU pools respectively
+        # Nodes connected to RRHs and BBU pools respectively
         self.sources = [0, 1, 2, 6, 7, 8]
         self.destinations = [3, 5]
 
@@ -128,16 +128,16 @@ class NetworkSimulatorEnv(gym.Env, ABC):
                 self.resources_bbu[self.destinations.index(next_node)] -= 1
                 self.routed_packets += 1
                 self.active_packets -= 1
-                # cg: need to add deletion to Event queue
+                # ?! --> cg: need to add deletion to Event queue
 
-                ###cg:add this completed route to history log
+                # ?! --> cg:add this completed route to history log
                 current_event.dest = next_node
                 current_event.qtime += 0.05
                 current_event.qtime += 2.7
                 self.history_queue.append((current_event.etime, current_event.qtime))
                 ###
 
-                ##cg: add Event to system for when the item is suppose to leave
+                # ?! --> cg: add Event to system for when the item is suppose to leave
                 heappush(self.event_queue, ((current_time + current_event.lifetime, -self.events), current_event))
 
                 ##
@@ -176,7 +176,7 @@ class NetworkSimulatorEnv(gym.Env, ABC):
                             (self.current_event.node, self.current_event.dest)), self.done
 
     def _reset(self):
-        self.readin_graph()
+        self.read_in_graph()
         self.distance = zeros((self.total_nodes, self.total_nodes))
         self.shortest = zeros((self.total_nodes, self.total_nodes))
         self.compute_best()
@@ -211,9 +211,10 @@ class NetworkSimulatorEnv(gym.Env, ABC):
 
         return ((self.current_event.node, self.current_event.dest), (self.current_event.node, self.current_event.dest))
 
-    ###########helper functions############################
+    # Helper functions
+
     # Initializes a packet from a random source to a random destination
-    def readin_graph(self):
+    def read_in_graph(self):
         self.total_nodes = 0
         self.total_edges = 0
 
