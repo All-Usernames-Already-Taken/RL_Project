@@ -14,3 +14,4 @@ resources_bbu: 30
 resources_edge: 10
 cost: 100
 act: 0, 0, 1
+# DINOSAURS
