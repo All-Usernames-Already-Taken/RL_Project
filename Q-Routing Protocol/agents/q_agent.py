@@ -78,7 +78,7 @@ class NetworkTabularQAgent(object):
         return x / x.sum(axis=0)  # only difference
 
     @staticmethod
-    def next_minibatch(x_, y_, z_, batch_size):
+    def next_mini_batch(x_, y_, z_, batch_size):
         """Create a vector with batch_size quantity of random integers; generate a mini-batch therefrom."""
         perm = np.random.permutation(x_.shape[0])
         perm = perm[:batch_size]
@@ -87,6 +87,7 @@ class NetworkTabularQAgent(object):
         z_batch = z_[perm]
         return x_batch, y_batch, z_batch
 
+    # called in initializer
     def _build_net(self):
         with tf.name_scope('inputs'):
             self.tf_observations = \
@@ -247,7 +248,8 @@ class NetworkTabularQAgent(object):
                     shape=[None, ],
                     name="actions_value"
                 )
-        temp_layer_in = None
+
+        # temp_layer_in = None
         # fc1
         # https://github.com/MorvanZhou/Reinforcement-learning-with-tensorflow/blob/master/contents/7_Policy_gradient_softmax/RL_brain.py
         act = [None, tf.nn.relu, tf.nn.sigmoid]
@@ -269,7 +271,7 @@ class NetworkTabularQAgent(object):
                     name=None,
                     reuse=None
                 )
-                temp_layer_in = temp_layer
+                # temp_layer_in = temp_layer
 
             if layer_type[layer] == 'middle':
                 temp_layer = tf.layers.dense(
@@ -288,7 +290,7 @@ class NetworkTabularQAgent(object):
                     name=None,
                     reuse=None
                 )
-                temp_layer_in = temp_layer
+                # temp_layer_in = temp_layer
 
             if layer_type[layer] == 'last':
                 self.all_act = tf.layers.dense(
@@ -307,6 +309,7 @@ class NetworkTabularQAgent(object):
                     name=None,
                     reuse=None
                 )
+            temp_layer_in = temp_layer
 
         # use softmax to convert to probability
         self.action_probabilities = tf.nn.softmax(logits=self.all_act, axis=None, name=None)
@@ -423,7 +426,7 @@ class NetworkTabularQAgent(object):
         ep_obs = len(self.ep_obs)
         self.ep_obs2 = np.array(self.ep_obs).reshape(ep_obs, self.n_features)
         discounted_ep_rs_norm = self._discount_and_norm_rewards()
-        _, loss, log_probs, act_val, l1 = \
+        _, loss, log_probabilities, act_val, l1 = \
             self.session.run(
                 fetches=[self.train_op, self.loss, self.neg_log_prob, self.all_act, self.layer],
                 feed_dict={
@@ -442,13 +445,13 @@ class NetworkTabularQAgent(object):
         self.ep_obs2 = np.array(self.ep_obs).reshape(ep_obs, self.n_features)
         discounted_ep_rs_norm = self._discount_and_norm_rewards()
         x_batch, y_batch, z_batch = \
-            self.next_minibatch(
+            self.next_mini_batch(
                 np.vstack(self.ep_obs2),
                 np.array(self.ep_as),
                 np.array(discounted_ep_rs_norm),
                 ep_obs
             )
-        _, loss, log_probs, act_val = \
+        _, loss, log_probabilities, act_val = \
             self.session.run(
                 fetches=[self.train_op, self.loss, self.neg_log_prob, self.all_act],
                 feed_dict={
@@ -467,7 +470,7 @@ class NetworkTabularQAgent(object):
         self.ep_obs2 = np.array(self.ep_obs).reshape(ep_obs, self.n_features)
         for i in range(0, 1):
             x_batch, y_batch, z_batch = \
-                self.next_minibatch(
+                self.next_mini_batch(
                     np.vstack(self.ep_obs2),
                     np.array(self.ep_as),
                     np.array(self.ep_rs),
@@ -539,10 +542,10 @@ class NetworkTabularQAgent(object):
         return action
 
     def act_nn2(self, resources_edges, resources_bbu):
-        obs = resources_edges + resources_bbu
-        obs = np.array(obs).reshape(1, self.n_features)
+        edge_bbu_sum = resources_edges + resources_bbu
+        obs = np.array(edge_bbu_sum).reshape(1, self.n_features)
         action = self.choose_action2(obs)
-        self.store_transition_temp(resources_edges + resources_bbu, action)
+        self.store_transition_temp(edge_bbu_sum, action)
         next_node = self.links[self.node][action]
         # l_num = self.link_num[self.node][action]
         if resources_edges[self.link_num[self.node][action]] == 0:

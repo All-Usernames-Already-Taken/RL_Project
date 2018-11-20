@@ -84,8 +84,11 @@ class NetworkSimulatorEnv(gym.Env, ABC):
         self.events = 0
         self.sources = [0, 1, 2, 6, 7, 8]  # Nodes connected to RRHs
         self.destinations = [3, 5]  # Nodes connected to BBU pools respectively
-        self.current_event = []
+        # self.current_event = []
+        # self.resources_bbu = []
+        # self.resources_edges = []
 
+    # Conflicts with core.py reset method. May prove problematic. If mean to use this method, change its name.
     def _step(self, action):
         # if(self.total_routing_time/self.routed_packets < 10): #totally random, need change
 
@@ -178,6 +181,7 @@ class NetworkSimulatorEnv(gym.Env, ABC):
                     return ((current_event.node, current_event.destination),
                             (self.current_event.node, self.current_event.destination)), self.done
 
+    # Conflicts with core.py reset method. May prove problematic. If mean to use this method, change its name.
     def _reset(self):
         self.read_in_graph()
         self.distance = zeros((self.total_nodes, self.total_nodes))
@@ -219,9 +223,7 @@ class NetworkSimulatorEnv(gym.Env, ABC):
 
     # Initializes a packet from a random source to a random destination
     def read_in_graph(self):
-        self.total_nodes = 0
-        self.total_edges = 0
-
+        self.total_nodes, self.total_edges = 0, 0
         graph_file = open(self.graph_name, "r")
 
         for line in graph_file:
@@ -250,11 +252,9 @@ class NetworkSimulatorEnv(gym.Env, ABC):
                 self.total_edges = self.total_edges + 1
 
     def reset_history(self):
-        self.send_fail = 0
-        self.history_queue = []
+        self.send_fail, self.history_queue = 0, []
 
     def start_packet(self, time, src):
-
         self.active_packets = self.active_packets + 1
         current_event = Event(time, src)
         current_event.source = src

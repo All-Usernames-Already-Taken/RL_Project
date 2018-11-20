@@ -4,7 +4,8 @@ from agents.q_agent import NetworkTabularQAgent
 from sys import argv
 
 
-def main():
+def main(speak=True):
+    speak = False
 
     test_file = argv[1]
     d = {}
@@ -59,13 +60,14 @@ def main():
 
     # cg: set up agents for every node
     n_features = len(env.resources_bbu + env.resources_edges)
-    for i in range(0, env.total_nodes):
 
+    done = False
+    for nodes in range(0, env.total_nodes):
         agent_list.append(
             NetworkTabularQAgent(
                 env.total_nodes,
                 env.total_edges,
-                i,
+                nodes,
                 env.total_local_connections,
                 env.links,
                 env.abs_link_id,
@@ -78,13 +80,11 @@ def main():
                 mean_val,
                 std_val,
                 constant_val,
-                act_func))
-
-    done = False
+                act_func
+            )
+        )
     for i in range(iterations):
-
         state_pair = env.reset()
-
         for t in range(time_steps):
             if not done:
                 current_state = state_pair[1]
@@ -94,20 +94,20 @@ def main():
                 state_pair, done = env.step(action)
 
                 if t % dumps == 0 and t > 0:
-
-                    print(
-                        "iteration: {}\n"
-                        "time: {}\n"
-                        "send_fail: {}\n"
-                        "history queue length: {}\n"
-                        "calculated_reward: {}\n\n".format(
-                            i,
-                            t,
-                            env.send_fail,
-                            len(env.history_queue),
-                            env.calculate_reward()
+                    if speak:
+                        print(
+                            "iteration: {}\n"
+                            "time: {}\n"
+                            "send_fail: {}\n"
+                            "history queue length: {}\n"
+                            "calculated_reward: {}\n\n".format(
+                                i,
+                                t,
+                                env.send_fail,
+                                len(env.history_queue),
+                                env.calculate_reward()
+                            )
                         )
-                    )
                     r = env.calculate_reward()
                     r_hist.append(r)
                     data.append(
@@ -120,10 +120,12 @@ def main():
                             agent_list[j].store_transition_episode(r)
 
         if i % 1 == 0:
-            print("learning")
+            if speak:
+                print("learning")
             for j in range(0, env.total_nodes):
                 if j not in env.destinations:
-                    print(j)
+                    if speak:
+                        print(j)
                     agent_list[j].learn5(i)
 
         # Record statistics from iteration
