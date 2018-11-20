@@ -316,6 +316,7 @@ class NetworkSimulatorEnv(gym.Env, ABC):
         avg_reward = reward / l
         return avg_reward
 
+    # Not used as of 11/20/18
     def add_link_lifetime_event(self):
         current_event.node = next_node  # Do the send!
         current_event.hops += 1

@@ -222,6 +222,7 @@ class NetworkTabularQAgent(object):
         with tf.name_scope('train'):
             self.train_op = tf.train.AdamOptimizer(self.learning_rate).minimize(self.loss)
 
+    # Not used as of 11/20/18
     def _build_net_auto(self, num_layers, layer_size, layer_type, mean_val, std_val, constant_val, activation_type):
         with tf.name_scope('inputs'):
             self.tf_observations = \
@@ -404,6 +405,7 @@ class NetworkTabularQAgent(object):
                 reward
             )
 
+    # Not used as of 11/20/18
     def learn2(self):
         # ?! --> is it duration though?
         ep_obs = len(self.ep_obs)
@@ -421,6 +423,7 @@ class NetworkTabularQAgent(object):
 
         self.ep_obs, self.ep_as, self.ep_rs = [], [], []  # empty episode data
 
+    # Not used as of 11/20/18
     def learn3(self, iteration):
         # ?! --> is it duration though?
         ep_obs = len(self.ep_obs)
@@ -465,6 +468,7 @@ class NetworkTabularQAgent(object):
         if iteration % 1 == 0:
             self.ep_obs, self.ep_as, self.ep_rs = [], [], []  # empty episode data
 
+    # Not used as of 11/20/18
     def learn4(self, iteration):
         ep_obs = len(self.ep_obs)
         self.ep_obs2 = np.array(self.ep_obs).reshape(ep_obs, self.n_features)
@@ -499,6 +503,7 @@ class NetworkTabularQAgent(object):
         discounted_ep_rs /= np.std(discounted_ep_rs)
         return discounted_ep_rs
 
+    # Not used as of 11/20/18
     def act_nn(self, resources_edges, resources_bbu):
         action = 0
         obs = resources_edges + resources_bbu
@@ -541,6 +546,7 @@ class NetworkTabularQAgent(object):
             self.store_transition_temp(resources_edges + resources_bbu, action)
         return action
 
+    # Not used as of 11/20/18
     def act_nn2(self, resources_edges, resources_bbu):
         edge_bbu_sum = resources_edges + resources_bbu
         obs = np.array(edge_bbu_sum).reshape(1, self.n_features)
@@ -555,6 +561,7 @@ class NetworkTabularQAgent(object):
                 action = -1
         return action
 
+    # Not used as of 11/20/18
     def act(self, state, n_links, links, resources_edges, resources_bbu, link_num, dests, best=False):
         action = 0
         n = state[0]
@@ -587,6 +594,7 @@ class NetworkTabularQAgent(object):
         self.hist_action.append((resources_edges + resources_bbu, action))
         return action
 
+    # Not used as of 11/20/18
     def learn(self, current_event, next_event, reward, action, done, nlinks):
         # NN
         n = current_event[0]
