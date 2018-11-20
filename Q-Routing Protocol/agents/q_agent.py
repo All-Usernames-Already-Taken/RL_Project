@@ -61,73 +61,113 @@ class NetworkTabularQAgent(object):
         self.hist_resources = []
         self.hist_action = []
 
-        self.sess = tf.Session()
+        self.session = tf.Session()
         self._build_net()  # Model
-        self.sess.run(tf.global_variables_initializer())
+        self.session.run(tf.global_variables_initializer())
 
         # observations = tf.placeholder(shape=[None, self.n_actions], dtype=tf.float32)
         # actions = tf.placeholder(shape=[None], dtype=tf.float32)
         # rewards = tf.placeholder(shape=[None], dtype=tf.float32)
         # self._build_net_auto(num_layers,layer_size,layer_type,mean_val,std_val,constant_val,activation_type)
 
-    def normalize_weights(self, x):
+    @staticmethod
+    def normalize_weights(x):
         """Compute softmax values for each sets of scores in x."""
         return x / x.sum(axis=0)  # only difference
 
-    def next_minibatch(self, x_, y_, z_, batch_size):
-        # Create a vector with batch_size quantity of random integers
+    @staticmethod
+    def next_minibatch(x_, y_, z_, batch_size):
+        """Create a vector with batch_size quantity of random integers; generate a mini-batch therefrom."""
         perm = np.random.permutation(x_.shape[0])
         perm = perm[:batch_size]
-        # Generate the mini-batch
         x_batch = x_[perm, :]
         y_batch = y_[perm]
         z_batch = z_[perm]
-        # Return the images and the labels
         return x_batch, y_batch, z_batch
 
     def _build_net(self):
         with tf.name_scope('inputs'):
-            self.tf_obs = tf.placeholder(tf.float32, [None, self.n_features], name="observations")
-            self.tf_obs2 = tf.placeholder(tf.float32, [None, self.n_features], name="observations")
-            self.tf_acts = tf.placeholder(tf.int32, [None, ], name="actions_num")
+            self.tf_observations = tf.placeholder(tf.float32, [None, self.n_features], name="observations")
+            self.tf_observations_2 = tf.placeholder(tf.float32, [None, self.n_features], name="observations")
+            self.tf_action_number = tf.placeholder(tf.int32, [None, ], name="actions_num")
+            # WHAT IS THS TF_VT? Specifically, what is the vt?
             self.tf_vt = tf.placeholder(tf.float32, [None, ], name="actions_value")
         # fc1
         # https://github.com/MorvanZhou/Reinforcement-learning-with-tensorflow/blob/master/contents/7_Policy_gradient_softmax/RL_brain.py
         self.layer = tf.layers.dense(
-            inputs=self.tf_obs,
+            inputs=self.tf_observations,
             units=50,
             activation=None,  # tf.nn.relu,  # tanh activation
+            use_bias=True,
             kernel_initializer=tf.random_normal_initializer(mean=0, stddev=.1),
-            bias_initializer=tf.constant_initializer(1)
+            bias_initializer=tf.constant_initializer(1),
+            kernel_regularizer=None,
+            bias_regularizer=None,
+            activity_regularizer=None,
+            kernel_constraint=None,
+            bias_constraint=None,
+            trainable=True,
+            name=None,
+            reuse=None
         )
         layer2 = tf.layers.dense(
             inputs=self.layer,
             units=25,
             activation=tf.nn.relu,  # tf.nn.relu,  # tanh activation
+            use_bias=True,
             kernel_initializer=tf.random_normal_initializer(mean=0, stddev=.1),
-            bias_initializer=tf.constant_initializer(1)
+            bias_initializer=tf.constant_initializer(1),
+            kernel_regularizer=None,
+            bias_regularizer=None,
+            activity_regularizer=None,
+            kernel_constraint=None,
+            bias_constraint=None,
+            trainable=True,
+            name=None,
+            reuse=None
         )
         layer3 = tf.layers.dense(
             inputs=layer2,
             units=15,
             activation=tf.nn.sigmoid,  # tf.nn.relu,  # tanh activation
+            use_bias=True,
             kernel_initializer=tf.random_normal_initializer(mean=0, stddev=.1),
-            bias_initializer=tf.constant_initializer(1)
+            bias_initializer=tf.constant_initializer(1),
+            kernel_regularizer=None,
+            bias_regularizer=None,
+            activity_regularizer=None,
+            kernel_constraint=None,
+            bias_constraint=None,
+            trainable=True,
+            name=None,
+            reuse=None
         )
         # fc2
         self.all_act = tf.layers.dense(
             inputs=layer3,
             units=self.n_actions,
             activation=tf.nn.relu,
+            use_bias=True,
             kernel_initializer=tf.random_normal_initializer(mean=0, stddev=.1),
-            bias_initializer=tf.constant_initializer(1)
+            bias_initializer=tf.constant_initializer(1),
+            kernel_regularizer=None,
+            bias_regularizer=None,
+            activity_regularizer=None,
+            kernel_constraint=None,
+            bias_constraint=None,
+            trainable=True,
+            name=None,
+            reuse=None
         )
 
-        self.all_act_prob = tf.nn.softmax(self.all_act)  # use softmax to convert to probability
+        self.action_probabilities = tf.nn.softmax(self.all_act)  # use softmax to convert to probability
 
         with tf.name_scope('loss'):
-            self.neg_log_prob = tf.reduce_sum(
-                -tf.log(self.all_act_prob) * tf.one_hot(self.tf_acts, self.n_actions), axis=1)
+            self.neg_log_prob = \
+                tf.reduce_sum(
+                    -tf.log(self.action_probabilities) *
+                    tf.one_hot(self.tf_action_number, self.n_actions),
+                    axis=1)
             self.loss = tf.reduce_mean(self.neg_log_prob * self.tf_vt)  # reward guided loss
             print("help")
         with tf.name_scope('train'):
@@ -135,9 +175,9 @@ class NetworkTabularQAgent(object):
 
     def _build_net_auto(self, num_layers, layer_size, layer_type, mean_val, std_val, constant_val, activation_type):
         with tf.name_scope('inputs'):
-            self.tf_obs = tf.placeholder(tf.float32, [None, self.n_features], name="observations")
-            self.tf_obs2 = tf.placeholder(tf.float32, [None, self.n_features], name="observations")
-            self.tf_acts = tf.placeholder(tf.int32, [None, ], name="actions_num")
+            self.tf_observations = tf.placeholder(tf.float32, [None, self.n_features], name="observations")
+            self.tf_observations_2 = tf.placeholder(tf.float32, [None, self.n_features], name="observations")
+            self.tf_action_number = tf.placeholder(tf.int32, [None, ], name="actions_num")
             self.tf_vt = tf.placeholder(tf.float32, [None, ], name="actions_value")
         # fc1
         # https://github.com/MorvanZhou/Reinforcement-learning-with-tensorflow/blob/master/contents/7_Policy_gradient_softmax/RL_brain.py
@@ -145,7 +185,7 @@ class NetworkTabularQAgent(object):
         for i in range(num_layers):
             if layer_type[i] == 'first':
                 temp_layer = tf.layers.dense(
-                    inputs=self.tf_obs,
+                    inputs=self.tf_observations,
                     units=layer_size[i],
                     activation=act[activation_type[i]],  # activation_type[i],
                     kernel_initializer=tf.random_normal_initializer(mean=mean_val[i], stddev=std_val[i]),
@@ -169,25 +209,26 @@ class NetworkTabularQAgent(object):
                 )
             temp_layer_in = temp_layer
 
-        self.all_act_prob = tf.nn.softmax(self.all_act)  # use softmax to convert to probability
+        self.action_probabilities = tf.nn.softmax(self.all_act)  # use softmax to convert to probability
 
         with tf.name_scope('loss'):
-            self.neg_log_prob = tf.reduce_sum(-tf.log(self.all_act_prob) * tf.one_hot(self.tf_acts, self.n_actions),
-                                              axis=1)
+            self.neg_log_prob = tf.reduce_sum(
+                -tf.log(self.action_probabilities) * tf.one_hot(self.tf_action_number, self.n_actions),
+                axis=1)
             self.loss = tf.reduce_mean(self.neg_log_prob * self.tf_vt)  # reward guided loss
             print("help")
         with tf.name_scope('train'):
             self.train_op = tf.train.AdamOptimizer(self.learning_rate).minimize(self.loss)
 
     def choose_action(self, observation, valid):
-        prob_weights = self.sess.run(self.all_act_prob, feed_dict={self.tf_obs: observation})
+        prob_weights = self.session.run(self.action_probabilities, feed_dict={self.tf_observations: observation})
         valid_weights = prob_weights * valid
         valid_prob = self.normalize_weights(valid_weights[0])
         action = np.random.choice(range(prob_weights.shape[1]), p=valid_prob.ravel())
         return action
 
     def choose_action2(self, observation):
-        prob_weights = self.sess.run(self.all_act_prob, feed_dict={self.tf_obs: observation})
+        prob_weights = self.session.run(self.action_probabilities, feed_dict={self.tf_observations: observation})
         action = np.random.choice(range(prob_weights.shape[1]), p=prob_weights.ravel())
         return action
 
@@ -209,9 +250,9 @@ class NetworkTabularQAgent(object):
         duration = len(self.ep_obs)
         # ?! --> is it duration though?
         self.ep_obs = np.array(self.ep_obs).reshape(duration, self.n_features)
-        self.sess.run(self.train_op, feed_dict={
-            self.tf_obs: np.vstack(self.ep_obs),  # shape=[None, n_obs]
-            self.tf_acts: np.array(self.ep_as),  # shape=[None, ]
+        self.session.run(self.train_op, feed_dict={
+            self.tf_observations: np.vstack(self.ep_obs),  # shape=[None, n_obs]
+            self.tf_action_number: np.array(self.ep_as),  # shape=[None, ]
             self.tf_vt: np.array(self.ep_rs),  # shape=[None, ]
         })
 
@@ -221,10 +262,10 @@ class NetworkTabularQAgent(object):
         duration = len(self.ep_obs)
         self.ep_obs2 = np.array(self.ep_obs).reshape(duration, self.n_features)
         discounted_ep_rs_norm = self._discount_and_norm_rewards()
-        _, loss, log_probs, act_val, l1 = self.sess.run(
+        _, loss, log_probs, act_val, l1 = self.session.run(
             [self.train_op, self.loss, self.neg_log_prob, self.all_act, self.layer], feed_dict={
-                self.tf_obs: np.vstack(self.ep_obs2),  # shape=[None, n_obs]
-                self.tf_acts: np.array(self.ep_as),  # shape=[None, ]
+                self.tf_observations: np.vstack(self.ep_obs2),  # shape=[None, n_obs]
+                self.tf_action_number: np.array(self.ep_as),  # shape=[None, ]
                 self.tf_vt: np.array(discounted_ep_rs_norm),  # shape=[None, ]
             })
         if iter % 2 == 0:
@@ -236,10 +277,10 @@ class NetworkTabularQAgent(object):
         discounted_ep_rs_norm = self._discount_and_norm_rewards()
         x_batch, y_batch, z_batch = self.next_minibatch(np.vstack(self.ep_obs2), np.array(self.ep_as),
                                                         np.array(discounted_ep_rs_norm), l)
-        _, loss, log_probs, act_val = self.sess.run([self.train_op, self.loss, self.neg_log_prob, self.all_act],
-                                                    feed_dict={
-                                                        self.tf_obs: x_batch,  # shape=[None, n_obs]
-                                                        self.tf_acts: y_batch,  # shape=[None, ]
+        _, loss, log_probs, act_val = self.session.run([self.train_op, self.loss, self.neg_log_prob, self.all_act],
+                                                       feed_dict={
+                                                           self.tf_observations: x_batch,  # shape=[None, n_obs]
+                                                           self.tf_action_number: y_batch,  # shape=[None, ]
                                                         self.tf_vt: z_batch,  # shape=[None, ]
                                                     })
         if iter % 1 == 0:
@@ -251,9 +292,9 @@ class NetworkTabularQAgent(object):
         for i in range(0, 1):
             x_batch, y_batch, z_batch = self.next_minibatch(np.vstack(self.ep_obs2), np.array(self.ep_as),
                                                             np.array(self.ep_rs), l)
-            self.sess.run(self.train_op, feed_dict={
-                self.tf_obs: x_batch,  # shape=[None, n_obs]
-                self.tf_acts: y_batch,  # shape=[None, ]
+            self.session.run(self.train_op, feed_dict={
+                self.tf_observations: x_batch,  # shape=[None, n_obs]
+                self.tf_action_number: y_batch,  # shape=[None, ]
                 self.tf_vt: z_batch,  # shape=[None, ]
             })
         if iter % 5 == 0:
