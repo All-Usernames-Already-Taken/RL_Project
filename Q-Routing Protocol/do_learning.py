@@ -95,12 +95,19 @@ def main():
 
                 if t % dumps == 0 and t > 0:
 
-                    print("iteration: {}\n"
-                          "time: {}\n"
-                          "send_fail: {}\n"
-                          "history queue length: {}\n"
-                          "calculated_reward: {}\n\n"
-                          .format(i, t, env.send_fail, len(env.history_queue), env.calculate_reward()))
+                    print(
+                        "iteration: {}\n"
+                        "time: {}\n"
+                        "send_fail: {}\n"
+                        "history queue length: {}\n"
+                        "calculated_reward: {}\n\n".format(
+                            i,
+                            t,
+                            env.send_fail,
+                            len(env.history_queue),
+                            env.calculate_reward()
+                        )
+                    )
                     r = env.calculate_reward()
                     r_hist.append(r)
                     data.append(
