@@ -317,14 +317,14 @@ class NetworkSimulatorEnv(gym.Env, ABC):
         return avg_reward
 
     # Not used as of 11/20/18
-    def add_link_lifetime_event(self):
-        current_event.node = next_node  # Do the send!
-        current_event.hops += 1
-        current_event.source = -5
-        # current_event
-        # add (source,action) to history of path
-        # current_event.hist
-        heappush(self.event_queue, ((current_time + current_event.lifetime, -self.events), current_event))
+    # def add_link_lifetime_event(self):
+    #     current_event.node = next_node  # Do the send!
+    #     current_event.hops += 1
+    #     current_event.source = -5
+    #     # current_event
+    #     # add (source,action) to history of path
+    #     # current_event.hist
+    #     heappush(self.event_queue, ((current_time + current_event.lifetime, -self.events), current_event))
 
     def compute_best(self):
         changing = True
