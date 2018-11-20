@@ -5,28 +5,9 @@ from sys import argv
 
 
 def main(speak=True):
-    speak = False
+    # speak = False
 
-    test_file = argv[1]
-    d = {}
-    with open(test_file, 'r') as f:
-        for line in f.read().splitlines():
-            print(line)
-            line = line.strip()
-            k, v = line.split(':')
-            k, v = k.strip(), v.strip()
-            v = v.split(',')
-            v = [v[i].strip() for i in range(len(v))]
-            for j in range(len(v)):
-                try:
-                    v[j] = int(v[j])
-                except ValueError:
-                    try:
-                        v[j] = float(v[j])
-                    except ValueError:
-                        pass
-                    pass
-            d.setdefault(k, v)
+    d, test_file = file_dictionary_extractor(argv[1])
 
     time_steps = d['time_steps'][0]
     iterations = d['iterations'][0]
@@ -145,6 +126,30 @@ def main(speak=True):
 
             # Writing out a break to indicate different slices...
             # outfile.write('# New slice\n')
+
+
+def file_dictionary_extractor(file):
+    test_file = file
+    d = {}
+    with open(test_file, 'r') as f:
+        for line in f.read().splitlines():
+            print(line)
+            line = line.strip()
+            k, v = line.split(':')
+            k, v = k.strip(), v.strip()
+            v = v.split(',')
+            v = [v[i].strip() for i in range(len(v))]
+            for j in range(len(v)):
+                try:
+                    v[j] = int(v[j])
+                except ValueError:
+                    try:
+                        v[j] = float(v[j])
+                    except ValueError:
+                        pass
+                    pass
+            d.setdefault(k, v)
+    return d, test_file
 
 
 if __name__ == '__main__':

@@ -83,7 +83,7 @@ class NetworkSimulatorEnv(gym.Env, ABC):
         self.queue_full = 0
         self.events = 0
         self.sources = [0, 1, 2, 6, 7, 8]  # Nodes connected to RRHs
-        self.destinations = [3, 5]  # Nodes connected to BBU pools respectively
+        self.destinations = [3, 5]  # Nodes connected to BBU pools
         # self.current_event = []
         # self.resources_bbu = []
         # self.resources_edges = []
