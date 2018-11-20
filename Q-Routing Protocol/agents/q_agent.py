@@ -44,7 +44,7 @@ class NetworkTabularQAgent(object):
         self.link_num = link_num
         self.destinations = destinations
         self.n_features = n_features
-        self.lr = learning_rate
+        self.learning_rate = learning_rate
         self.num_layers = num_layers
         self.layer_type = layer_type
         self.mean_val = mean_val
@@ -74,16 +74,16 @@ class NetworkTabularQAgent(object):
         """Compute softmax values for each sets of scores in x."""
         return x / x.sum(axis=0)  # only difference
 
-    def next_minibatch(self, X_, Y_, Z_, batch_size):
-        #    Create a vector with batch_size random integers
-        perm = np.random.permutation(X_.shape[0])
+    def next_minibatch(self, x_, y_, z_, batch_size):
+        # Create a vector with batch_size quantity of random integers
+        perm = np.random.permutation(x_.shape[0])
         perm = perm[:batch_size]
-        # Generate the minibatch
-        X_batch = X_[perm, :]
-        Y_batch = Y_[perm]
-        Z_batch = Z_[perm]
+        # Generate the mini-batch
+        x_batch = x_[perm, :]
+        y_batch = y_[perm]
+        z_batch = z_[perm]
         # Return the images and the labels
-        return X_batch, Y_batch, Z_batch
+        return x_batch, y_batch, z_batch
 
     def _build_net(self):
         with tf.name_scope('inputs'):
@@ -131,7 +131,7 @@ class NetworkTabularQAgent(object):
             self.loss = tf.reduce_mean(self.neg_log_prob * self.tf_vt)  # reward guided loss
             print("help")
         with tf.name_scope('train'):
-            self.train_op = tf.train.AdamOptimizer(self.lr).minimize(self.loss)
+            self.train_op = tf.train.AdamOptimizer(self.learning_rate).minimize(self.loss)
 
     def _build_net_auto(self, num_layers, layer_size, layer_type, mean_val, std_val, constant_val, activation_type):
         with tf.name_scope('inputs'):
@@ -177,7 +177,7 @@ class NetworkTabularQAgent(object):
             self.loss = tf.reduce_mean(self.neg_log_prob * self.tf_vt)  # reward guided loss
             print("help")
         with tf.name_scope('train'):
-            self.train_op = tf.train.AdamOptimizer(self.lr).minimize(self.loss)
+            self.train_op = tf.train.AdamOptimizer(self.learning_rate).minimize(self.loss)
 
     def choose_action(self, observation, valid):
         prob_weights = self.sess.run(self.all_act_prob, feed_dict={self.tf_obs: observation})
@@ -234,13 +234,13 @@ class NetworkTabularQAgent(object):
         l = len(self.ep_obs)
         self.ep_obs2 = np.array(self.ep_obs).reshape(l, self.n_features)
         discounted_ep_rs_norm = self._discount_and_norm_rewards()
-        X_batch, Y_batch, Z_batch = self.next_minibatch(np.vstack(self.ep_obs2), np.array(self.ep_as),
+        x_batch, y_batch, z_batch = self.next_minibatch(np.vstack(self.ep_obs2), np.array(self.ep_as),
                                                         np.array(discounted_ep_rs_norm), l)
         _, loss, log_probs, act_val = self.sess.run([self.train_op, self.loss, self.neg_log_prob, self.all_act],
                                                     feed_dict={
-                                                        self.tf_obs: X_batch,  # shape=[None, n_obs]
-                                                        self.tf_acts: Y_batch,  # shape=[None, ]
-                                                        self.tf_vt: Z_batch,  # shape=[None, ]
+                                                        self.tf_obs: x_batch,  # shape=[None, n_obs]
+                                                        self.tf_acts: y_batch,  # shape=[None, ]
+                                                        self.tf_vt: z_batch,  # shape=[None, ]
                                                     })
         if iter % 1 == 0:
             self.ep_obs, self.ep_as, self.ep_rs = [], [], []  # empty episode data
@@ -249,12 +249,12 @@ class NetworkTabularQAgent(object):
         l = len(self.ep_obs)
         self.ep_obs2 = np.array(self.ep_obs).reshape(l, self.n_features)
         for i in range(0, 1):
-            X_batch, Y_batch, Z_batch = self.next_minibatch(np.vstack(self.ep_obs2), np.array(self.ep_as),
+            x_batch, y_batch, z_batch = self.next_minibatch(np.vstack(self.ep_obs2), np.array(self.ep_as),
                                                             np.array(self.ep_rs), l)
             self.sess.run(self.train_op, feed_dict={
-                self.tf_obs: X_batch,  # shape=[None, n_obs]
-                self.tf_acts: Y_batch,  # shape=[None, ]
-                self.tf_vt: Z_batch,  # shape=[None, ]
+                self.tf_obs: x_batch,  # shape=[None, n_obs]
+                self.tf_acts: y_batch,  # shape=[None, ]
+                self.tf_vt: z_batch,  # shape=[None, ]
             })
         if iter % 5 == 0:
             self.ep_obs, self.ep_as, self.ep_rs = [], [], []  # empty episode data
