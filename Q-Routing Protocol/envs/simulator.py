@@ -89,6 +89,7 @@ class NetworkSimulatorEnv(gym.Env, ABC):
         # self.resources_edges = []
 
     # Conflicts with core.py reset method. May prove problematic. If mean to use this method, change its name.
+    # Perhaps sim_step?
     def _step(self, action):
         # if(self.total_routing_time/self.routed_packets < 10): #totally random, need change
 
@@ -182,6 +183,7 @@ class NetworkSimulatorEnv(gym.Env, ABC):
                             (self.current_event.node, self.current_event.destination)), self.done
 
     # Conflicts with core.py reset method. May prove problematic. If mean to use this method, change its name.
+    # Perhaps sim_reset?
     def _reset(self):
         self.read_in_graph()
         self.distance = zeros((self.total_nodes, self.total_nodes))
