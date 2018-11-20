@@ -69,7 +69,7 @@ class NetworkSimulatorEnv(gym.Env, ABC):
         self.history_queue = []
         self.event_queue = []  # Q.PriorityQueue()
         self.links = defaultdict(dict)
-        self.abs_link_id = defaultdict(dict)
+        self.absolute_nodes_connected_to_absolute_edges = defaultdict(dict)
         self.current_event = Event(0.0, 0)  # do I need to do this?
         self.call_mean = 5  # Network load
         self.bbu_limit = 0
@@ -82,8 +82,8 @@ class NetworkSimulatorEnv(gym.Env, ABC):
         self.injections = 0
         self.queue_full = 0
         self.events = 0
-        self.sources = [0, 1, 2, 6, 7, 8]  # Nodes connected to RRHs
-        self.destinations = [3, 5]  # Nodes connected to BBU pools
+        self.rrh_connected_nodes = [0, 1, 2, 6, 7, 8]  # Nodes connected to RRHs
+        self.bbu_connected_nodes = [3, 5]  # Nodes connected to BBU pools
         # self.current_event = []
         # self.resources_bbu = []
         # self.resources_edges = []
@@ -106,7 +106,7 @@ class NetworkSimulatorEnv(gym.Env, ABC):
             if resources_add_back:
                 for i in resources_add_back:
                     src, act = i
-                    l_num = self.abs_link_id[src][act]
+                    l_num = self.absolute_nodes_connected_to_absolute_edges[src][act]
                     self.resources_edges[l_num] += 1
 
             self.current_event = self.get_new_packet_bump()
@@ -121,18 +121,18 @@ class NetworkSimulatorEnv(gym.Env, ABC):
 
         else:
             next_node = self.links[current_node][action]
-            l_num = self.abs_link_id[current_node][action]
+            l_num = self.absolute_nodes_connected_to_absolute_edges[current_node][action]
             self.resources_edges[l_num] += -1
             current_event.hops += 1
             current_event.resources.append((current_node, action))
             # need to check link valid if in destination or not in destination
             # handle the case where next_node is your destination
-            if next_node in self.destinations:
+            if next_node in self.bbu_connected_nodes:
                 # cg: next node is one of bbu units
                 # cg: check if there are enough resources at that destination
                 # self.resources_edges[l_num]+=-1
                 current_event.node = next_node  # do the send!
-                self.resources_bbu[self.destinations.index(next_node)] -= 1
+                self.resources_bbu[self.bbu_connected_nodes.index(next_node)] -= 1
                 self.routed_packets += 1
                 self.active_packets -= 1
                 # ?! --> cg: need to add deletion to Event queue
@@ -191,18 +191,17 @@ class NetworkSimulatorEnv(gym.Env, ABC):
         self.compute_best()
         self.done = False
         self.inter_queue_n = [self.inter_queue] * self.total_nodes
-
         self.event_queue = []  # Q.PriorityQueue()
         self.total_routing_time = 0.0
-
         self.enqueued = [0.0] * self.total_nodes
         self.n_enqueued = [0] * self.total_nodes
         self.send_fail = 0
         self.history_queue = []
         self.resources_edges = [self.edge_limit] * self.total_edges
-        self.resources_bbu = [self.bbu_limit] * len(self.destinations)
+        self.resources_bbu = [self.bbu_limit] * len(self.bbu_connected_nodes)
         self.events = 1
-        for i in self.sources:
+
+        for i in self.rrh_connected_nodes:
             inject_event = Event(0.0, i)
             inject_event.source = INJECT
             # Call mean is the lambda parameter of the poisson distribution
@@ -244,11 +243,13 @@ class NetworkSimulatorEnv(gym.Env, ABC):
                 # link_num gives way to access global identifier for local links
                 # links tells what nodes a node links to
                 self.links[node1][self.total_local_connections[node1]] = node2
-                self.abs_link_id[node1][self.total_local_connections[node1]] = self.total_edges
+                self.absolute_nodes_connected_to_absolute_edges[node1][
+                    self.total_local_connections[node1]] = self.total_edges
                 self.total_local_connections[node1] = self.total_local_connections[node1] + 1
 
                 self.links[node2][self.total_local_connections[node2]] = node1
-                self.abs_link_id[node2][self.total_local_connections[node2]] = self.total_edges
+                self.absolute_nodes_connected_to_absolute_edges[node2][
+                    self.total_local_connections[node2]] = self.total_edges
                 self.total_local_connections[node2] = self.total_local_connections[node2] + 1
 
                 self.total_edges = self.total_edges + 1
@@ -272,10 +273,10 @@ class NetworkSimulatorEnv(gym.Env, ABC):
 
             for i in resources_add_back:
                 src, act = i
-                l_num = self.abs_link_id[src][act]
+                l_num = self.absolute_nodes_connected_to_absolute_edges[src][act]
                 self.resources_edges[l_num] += 1
             d = current_event.destination
-            self.resources_bbu[self.destinations.index(d)] += 1
+            self.resources_bbu[self.bbu_connected_nodes.index(d)] += 1
             # get new item from queue
             current_event = heappop(self.event_queue)[1]
             # self.current_event = self.get_new_packet_bump()

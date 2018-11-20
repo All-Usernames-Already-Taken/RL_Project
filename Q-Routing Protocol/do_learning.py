@@ -51,8 +51,8 @@ def main(speak=True):
                 nodes,
                 env.total_local_connections,
                 env.links,
-                env.abs_link_id,
-                env.destinations,
+                env.absolute_nodes_connected_to_absolute_edges,
+                env.bbu_connected_nodes,
                 n_features,
                 learning_rate,
                 num_layers,
@@ -97,14 +97,14 @@ def main(speak=True):
 
                     # calculate loss
                     for j in range(0, env.total_nodes):
-                        if j not in env.destinations:
+                        if j not in env.bbu_connected_nodes:
                             agent_list[j].store_transition_episode(r)
 
         if i % 1 == 0:
             if speak:
                 print("learning")
             for j in range(0, env.total_nodes):
-                if j not in env.destinations:
+                if j not in env.bbu_connected_nodes:
                     if speak:
                         print(j)
                     agent_list[j].learn5(i)

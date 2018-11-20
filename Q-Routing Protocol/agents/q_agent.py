@@ -526,8 +526,8 @@ class NetworkTabularQAgent(object):
     #             # self.store_transition_temp(resources_edges+resources_bbu,action)
     #             next_node = self.links[self.node][action]
     #             # l_num = self.link_num[self.node][action]
-    #             if next_node in self.destinations:
-    #                 if resources_bbu[self.destinations.index(next_node)] == 0:
+    #             if next_node in self.bbu_connected_nodes:
+    #                 if resources_bbu[self.bbu_connected_nodes.index(next_node)] == 0:
     #                     flag = 1
     #                     valid[action] = 0
     #                 else:
@@ -542,20 +542,20 @@ class NetworkTabularQAgent(object):
     #     if action >= 0:
     #         self.store_transition_temp(resources_edges + resources_bbu, action)
     #     return action
-    # Not used as of 11/20/18
-    # def act_nn2(self, resources_edges, resources_bbu):
-    #     edge_bbu_sum = resources_edges + resources_bbu
-    #     obs = np.array(edge_bbu_sum).reshape(1, self.n_features)
-    #     action = self.choose_action2(obs)
-    #     self.store_transition_temp(edge_bbu_sum, action)
-    #     next_node = self.links[self.node][action]
-    #     # l_num = self.link_num[self.node][action]
-    #     if resources_edges[self.link_num[self.node][action]] == 0:
-    #         action = -1
-    #     elif next_node in self.destinations:
-    #         if resources_bbu[self.destinations.index(next_node)] == 0:
-    #             action = -1
-    #     return action
+
+    def act_nn2(self, resources_edges, resources_bbu):
+        edge_bbu_sum = resources_edges + resources_bbu
+        obs = np.array(edge_bbu_sum).reshape(1, self.n_features)
+        action = self.choose_action2(obs)
+        self.store_transition_temp(edge_bbu_sum, action)
+        next_node = self.links[self.node][action]
+        # l_num = self.link_num[self.node][action]
+        if resources_edges[self.link_num[self.node][action]] == 0:
+            action = -1
+        elif next_node in self.destinations:
+            if resources_bbu[self.destinations.index(next_node)] == 0:
+                action = -1
+        return action
     # Not used as of 11/20/18
     # def act(self, state, n_links, links, resources_edges, resources_bbu, link_num, dests, best=False):
     #     action = 0
