@@ -34,22 +34,9 @@ class NetworkTabularQAgent(object):
             "eps": 0.1,  # Epsilon in epsilon greedy policies
             "discount": 1,
             "n_iter": 10000000}  # Number of iterations
-        self.num_nodes = num_nodes
-        self.num_actions = num_actions
-        self.node = node
-        self.n_links = n_links
-        self.links = links
-        self.link_num = link_num
-        self.destinations = destinations
-        self.n_features = n_features
-        self.learning_rate = learning_rate
-        self.num_layers = num_layers
-        self.layer_type = layer_type
-        self.mean_val = mean_val
-        self.std_val = std_val
-        self.constant_val = constant_val
         self.activation_type = activation_type
-        self.n_actions = n_links[self.node]
+        self.constant_val = constant_val
+        self.destinations = destinations
         self.ep_obs = []
         self.ep_obs2 = []
         self.ep_as = []
@@ -58,7 +45,20 @@ class NetworkTabularQAgent(object):
         self.ep_as_temp = []
         self.hist_resources = []
         self.hist_action = []
+        self.learning_rate = learning_rate
+        self.layer_type = layer_type
+        self.links = links
+        self.link_num = link_num
+        self.mean_val = mean_val
+        self.node = node
+        self.n_actions = n_links[self.node]
+        self.n_features = n_features
+        self.n_links = n_links
+        self.num_nodes = num_nodes
+        self.num_actions = num_actions
+        self.num_layers = num_layers
         self.q = []
+        self.std_val = std_val
 
         self.session = tf.Session()
         self._build_net()  # Model

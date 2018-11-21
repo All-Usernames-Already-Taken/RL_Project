@@ -19,25 +19,25 @@ events = 0
 
 
 class Event:
-    # Event is a packet?
+    # Event is a fiber path usage
     def __init__(self, time, src):
-        self.destination = UNKNOWN
-        self.source = UNKNOWN
         self.birth = time
+        self.destination = UNKNOWN
         self.event_time = time
         self.hops = 0
-        self.q_time = 0
+        self.lifetime = 10
         self.node = src
-
+        self.q_time = 0
+        self.resources = []
+        self.source = UNKNOWN
         # ?! --> cg: need to add status for lifetime in bbu site,
         # ?! --> need to add status for path taken, and which bbu resource used
 
-        self.resources = []
-        self.lifetime = 10
-
 
 # /* Special events. */
+"""INJECT signifies adding a new packet"""
 INJECT, REPORT, END_SIM, UNKNOWN = -1, -2, -3, -4
+#
 
 # /* Define. */
 NIL = Nil = -1
@@ -53,30 +53,30 @@ class NetworkSimulatorEnv(gym.Env, ABC):
         self.bbu_limit = 0
         self.call_mean = 5  # Network load
         self.cost = 0
+        self.current_event = Event(0.0, 0)  # do I need to do this?
         self.distance = []
         self.done = False
         self.edge_limit = 0
+        self.event_queue = []  # Q.PriorityQueue()
         self.events = 0
         self.graph_name = 'data/graph1.txt'
-        self.total_routing_time = 0.0
-        self.success_count = 0
-        self.send_fail = 0
-        self.total_edges = 0
-        self.total_hops = 0
-        self.total_nodes = 0
-        self.queue_limit = 100
-        self.total_edges_from_node = {}
         self.history_queue = []
-        self.event_queue = []  # Q.PriorityQueue()
-        self.node_to_node = defaultdict(dict)
-        self.current_event = Event(0.0, 0)  # do I need to do this?
-        self.shortest = []
+        self.injections = 0
         self.next_destination = 0
         self.next_source = 0
-        self.injections = 0
+        self.node_to_node = defaultdict(dict)
+        self.send_fail = 0
+        self.total_edges = 0
+        self.total_edges_from_node = {}
         self.queue_full = 0
+        self.total_hops = 0
+        self.queue_limit = 100
+        self.total_nodes = 0
+        self.total_routing_time = 0.0
         self.routed_packets = 0
         self.rrh_connected_nodes = [0, 1, 2, 6, 7, 8]
+        self.success_count = 0
+        self.shortest = []
         self.viewer = None
 
     def _step(self, action):
@@ -172,17 +172,18 @@ class NetworkSimulatorEnv(gym.Env, ABC):
                             (self.current_event.node, self.current_event.destination)), self.done
 
     def _reset(self):
-        self.read_in_graph()
         self.distance, self.shortest = (zeros((self.total_nodes, self.total_nodes)),) * 2
         self.done = False
         self.event_queue = []  # Q.PriorityQueue()
-        self.total_routing_time = 0.0
-        self.send_fail = 0
-        self.history_queue = []
-        self.resources_edges = [self.edge_limit] * self.total_edges  # total edge dimensional array of edge limit scalar
-        self.resources_bbu = [self.bbu_limit] * len(
-            self.bbu_connected_nodes)  # bbu_connected dimensional array of bbu limit scalar
         self.events = 1
+        self.history_queue = []
+        self.read_in_graph()
+        # bbu_connected dimensional array of bbu limit scalar
+        self.resources_bbu = [self.bbu_limit] * len(self.bbu_connected_nodes)
+        # total edge dimensional array of edge limit scalar
+        self.resources_edges = [self.edge_limit] * self.total_edges
+        self.send_fail = 0
+        self.total_routing_time = 0.0
 
         for i in self.rrh_connected_nodes:
             inject_event = Event(0.0, i)
@@ -262,6 +263,7 @@ class NetworkSimulatorEnv(gym.Env, ABC):
         while current_event.source == INJECT:
             # cg: edit event_time of packet to decide when next packet of that type will enter system
             if self.call_mean == 1.0 or self.call_mean == 0.0:
+                # jl: think poisson
                 current_event.event_time += -m_log(1 - random())
             else:
                 current_event.event_time += -m_log(1 - random()) * float(self.call_mean)
