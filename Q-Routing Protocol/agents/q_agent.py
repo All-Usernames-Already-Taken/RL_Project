@@ -35,7 +35,6 @@ class NetworkTabularQAgent(object):
             "eps": 0.1,  # Epsilon in epsilon greedy policies
             "discount": 1,
             "n_iter": 10000000}  # Number of iterations
-
         self.num_nodes = num_nodes
         self.num_actions = num_actions
         self.node = node
@@ -51,7 +50,6 @@ class NetworkTabularQAgent(object):
         self.std_val = std_val
         self.constant_val = constant_val
         self.activation_type = activation_type
-
         self.n_actions = n_links[self.node]
         self.ep_obs = []
         self.ep_obs2 = []
@@ -222,134 +220,6 @@ class NetworkTabularQAgent(object):
         with tf.name_scope('train'):
             self.train_op = tf.train.AdamOptimizer(self.learning_rate).minimize(self.loss)
 
-    # Not used as of 11/20/18
-    # def _build_net_auto(self, num_layers, layer_size, layer_type, mean_val, std_val, constant_val, activation_type):
-    #     with tf.name_scope('inputs'):
-    #         self.tf_observations = \
-    #             tf.placeholder(
-    #                 dtype=tf.float32,
-    #                 shape=[None, self.n_features],
-    #                 name="observations"
-    #             )
-    #         self.tf_observations_2 = \
-    #             tf.placeholder(
-    #                 dtype=tf.float32,
-    #                 shape=[None, self.n_features],
-    #                 name="observations"
-    #             )
-    #         self.tf_action_number = \
-    #             tf.placeholder(
-    #                 dtpye=tf.int32,
-    #                 shape=[None, ],
-    #                 name="actions_num"
-    #             )
-    #         self.tf_vt = \
-    #             tf.placeholder(
-    #                 dtype=tf.float32,
-    #                 shape=[None, ],
-    #                 name="actions_value"
-    #             )
-    #
-    #     # temp_layer_in = None
-    #     # fc1
-    #     # https://github.com/MorvanZhou/Reinforcement-learning-with-tensorflow/blob/master/contents/7_Policy_gradient_softmax/RL_brain.py
-    #     act = [None, tf.nn.relu, tf.nn.sigmoid]
-    #     for layer in range(num_layers):
-    #         if layer_type[layer] == 'first':
-    #             temp_layer = tf.layers.dense(
-    #                 inputs=self.tf_observations,
-    #                 units=layer_size[layer],
-    #                 activation=act[activation_type[layer]],  # activation_type[layer],
-    #                 use_bias=True,
-    #                 kernel_initializer=tf.random_normal_initializer(mean=mean_val[layer], stddev=std_val[layer]),
-    #                 bias_initializer=tf.constant_initializer(constant_val[layer]),
-    #                 kernel_regularizer=None,
-    #                 bias_regularizer=None,
-    #                 activity_regularizer=None,
-    #                 kernel_constraint=None,
-    #                 bias_constraint=None,
-    #                 trainable=True,
-    #                 name=None,
-    #                 reuse=None
-    #             )
-    #             # temp_layer_in = temp_layer
-    #
-    #         if layer_type[layer] == 'middle':
-    #             temp_layer = tf.layers.dense(
-    #                 inputs=temp_layer_in,
-    #                 units=layer_size[layer],
-    #                 activation=act[activation_type[layer]],
-    #                 use_bias=True,
-    #                 kernel_initializer=tf.random_normal_initializer(mean=mean_val[layer], stddev=std_val[layer]),
-    #                 bias_initializer=tf.constant_initializer(constant_val[layer]),
-    #                 kernel_regularizer=None,
-    #                 bias_regularizer=None,
-    #                 activity_regularizer=None,
-    #                 kernel_constraint=None,
-    #                 bias_constraint=None,
-    #                 trainable=True,
-    #                 name=None,
-    #                 reuse=None
-    #             )
-    #             # temp_layer_in = temp_layer
-    #
-    #         if layer_type[layer] == 'last':
-    #             self.all_act = tf.layers.dense(
-    #                 inputs=temp_layer_in,
-    #                 units=self.n_actions,
-    #                 activation=act[activation_type[layer]],
-    #                 use_bias=True,
-    #                 kernel_initializer=tf.random_normal_initializer(mean=mean_val[layer], stddev=std_val[layer]),
-    #                 bias_initializer=tf.constant_initializer(constant_val[layer]),
-    #                 kernel_regularizer=None,
-    #                 bias_regularizer=None,
-    #                 activity_regularizer=None,
-    #                 kernel_constraint=None,
-    #                 bias_constraint=None,
-    #                 trainable=True,
-    #                 name=None,
-    #                 reuse=None
-    #             )
-    #         temp_layer_in = temp_layer
-    #
-    #     # use softmax to convert to probability
-    #     self.action_probabilities = tf.nn.softmax(logits=self.all_act, axis=None, name=None)
-    #
-    #     with tf.name_scope('loss'):
-    #         neg_logarithm_action_probabilities = -tf.log(self.action_probabilities)
-    #         one_hot_tensor = \
-    #             tf.one_hot(
-    #                 indices=self.tf_action_number,
-    #                 depth=self.n_actions,
-    #                 on_value=None,
-    #                 off_value=None,
-    #                 axis=None,
-    #                 dtype=None,
-    #                 name=None
-    #             )
-    #         self.neg_log_prob = \
-    #             tf.reduce_sum(
-    #                 input_tensor=neg_logarithm_action_probabilities * one_hot_tensor,
-    #                 axis=1,
-    #                 keepdims=None,
-    #                 name=None,
-    #                 reduction_indices=None,
-    #             )
-    #         # Reward guided loss
-    #         self.loss = \
-    #             tf.reduce_mean(
-    #                 input_tensor=self.neg_log_prob * self.tf_vt,
-    #                 axis=None,
-    #                 keepdims=None,
-    #                 name=None,
-    #                 reduction_indices=None
-    #             )
-    #
-    #         print("Why is there a print command here, and why print help?")
-    #
-    #     with tf.name_scope('train'):
-    #         self.train_op = tf.train.AdamOptimizer(self.learning_rate).minimize(self.loss)
-
     def choose_action(self, observation, valid):
         prob_weights = \
             self.session.run(
@@ -404,42 +274,6 @@ class NetworkTabularQAgent(object):
                 self.ep_as_temp[i],
                 reward
             )
-    # Not used as of 11/20/18
-    # def learn2(self):
-    #     # ?! --> is it duration though?
-    #     ep_obs = len(self.ep_obs)
-    #     self.ep_obs = np.array(self.ep_obs).reshape(ep_obs, self.n_features)
-    #     self.session.run(
-    #         fetches=self.train_op,
-    #         feed_dict={
-    #             self.tf_observations: np.vstack(self.ep_obs),  # shape=[None, n_obs]
-    #             self.tf_action_number: np.array(self.ep_as),  # shape=[None, ]
-    #             self.tf_vt: np.array(self.ep_rs),  # shape=[None, ]
-    #         },
-    #         options=None,
-    #         run_metadata=None
-    #     )
-    #
-    #     self.ep_obs, self.ep_as, self.ep_rs = [], [], []  # empty episode data
-    # Not used as of 11/20/18
-    # def learn3(self, iteration):
-    #     # ?! --> is it duration though?
-    #     ep_obs = len(self.ep_obs)
-    #     self.ep_obs2 = np.array(self.ep_obs).reshape(ep_obs, self.n_features)
-    #     discounted_ep_rs_norm = self._discount_and_norm_rewards()
-    #     _, loss, log_probabilities, act_val, l1 = \
-    #         self.session.run(
-    #             fetches=[self.train_op, self.loss, self.neg_log_prob, self.all_act, self.layer],
-    #             feed_dict={
-    #                 self.tf_observations: np.vstack(self.ep_obs2),  # shape=[None, n_obs]
-    #                 self.tf_action_number: np.array(self.ep_as),  # shape=[None, ]
-    #                 self.tf_vt: np.array(discounted_ep_rs_norm),  # shape=[None, ]
-    #             },
-    #             options=None,
-    #             run_metadata=None
-    #         )
-    #     if iteration % 2 == 0:
-    #         self.ep_obs, self.ep_as, self.ep_rs = [], [], []  # empty episode data
 
     def learn5(self, iteration):
         ep_obs = len(self.ep_obs)
@@ -465,30 +299,6 @@ class NetworkTabularQAgent(object):
             )
         if iteration % 1 == 0:
             self.ep_obs, self.ep_as, self.ep_rs = [], [], []  # empty episode data
-    # Not used as of 11/20/18
-    # def learn4(self, iteration):
-    #     ep_obs = len(self.ep_obs)
-    #     self.ep_obs2 = np.array(self.ep_obs).reshape(ep_obs, self.n_features)
-    #     for i in range(0, 1):
-    #         x_batch, y_batch, z_batch = \
-    #             self.next_mini_batch(
-    #                 np.vstack(self.ep_obs2),
-    #                 np.array(self.ep_as),
-    #                 np.array(self.ep_rs),
-    #                 ep_obs
-    #             )
-    #         self.session.run(
-    #             fetches=self.train_op,
-    #             feed_dict={
-    #                 self.tf_observations: x_batch,  # shape=[None, n_obs]
-    #                 self.tf_action_number: y_batch,  # shape=[None, ]
-    #                 self.tf_vt: z_batch,  # shape=[None, ]
-    #             },
-    #             options=None,
-    #             run_metadata=None
-    #         )
-    #     if iteration % 5 == 0:
-    #         self.ep_obs, self.ep_as, self.ep_rs = [], [], []  # empty episode data
 
     def _discount_and_norm_rewards(self):
         self.gamma, running_add = 0, 0
@@ -499,49 +309,6 @@ class NetworkTabularQAgent(object):
         discounted_ep_rs -= np.mean(discounted_ep_rs)
         discounted_ep_rs /= np.std(discounted_ep_rs)
         return discounted_ep_rs
-
-    # Not used as of 11/20/18
-    # def act_nn(self, resources_edges, resources_bbu):
-    #     action = 0
-    #     obs = resources_edges + resources_bbu
-    #     obs = np.array(obs).reshape(1, self.n_features)
-    #     valid = np.zeros(self.n_actions)
-    #     flag_e, flag_b = 1, 1
-    #     for i in range(0, self.n_actions):
-    #         if resources_edges[self.link_num[self.node][i]] > 0:
-    #             flag_e = 0
-    #             valid[i] = 1
-    #     for i in resources_bbu:
-    #         if i > 0:
-    #             flag_b = 0
-    #     # if resources_bbu>0:
-    #     #   flag_b=0
-    #     if flag_b or flag_e:
-    #         action = -1
-    #     else:
-    #         flag = 1
-    #         while flag:
-    #             # action = int(np.random.choice(range(0, nlinks[n])))  #choose random action
-    #             action = self.choose_action(obs, valid)
-    #             # self.store_transition_temp(resources_edges+resources_bbu,action)
-    #             next_node = self.links[self.node][action]
-    #             # l_num = self.link_num[self.node][action]
-    #             if next_node in self.bbu_connected_nodes:
-    #                 if resources_bbu[self.bbu_connected_nodes.index(next_node)] == 0:
-    #                     flag = 1
-    #                     valid[action] = 0
-    #                 else:
-    #                     flag = 0
-    #             else:
-    #                 flag = 0
-    #
-    #             if resources_edges[self.link_num[self.node][action]] == 0:
-    #                 flag = 1
-    #
-    #     # self.hist_action.append((resources_edges+resources_bbu,action))
-    #     if action >= 0:
-    #         self.store_transition_temp(resources_edges + resources_bbu, action)
-    #     return action
 
     def act_nn2(self, resources_edges, resources_bbu):
         edge_bbu_sum = resources_edges + resources_bbu
@@ -556,52 +323,3 @@ class NetworkTabularQAgent(object):
             if resources_bbu[self.destinations.index(next_node)] == 0:
                 action = -1
         return action
-    # Not used as of 11/20/18
-    # def act(self, state, n_links, links, resources_edges, resources_bbu, link_num, dests, best=False):
-    #     action = 0
-    #     n = state[0]
-    #     flag_e, flag_b = 1, 1
-    #     for i in range(0, n_links[n]):
-    #         if resources_edges[link_num[n][i]] > 0:
-    #             flag_e = 0
-    #     for i in resources_bbu:
-    #         if i > 0:
-    #             flag_b = 0
-    #     # if resources_bbu>0:
-    #     #   flag_b=0
-    #     if flag_b or flag_e:
-    #         action = -1
-    #     else:
-    #         flag = 1
-    #         while flag:
-    #             action = int(np.random.choice(range(0, n_links[n])))  # choose random action
-    #             next_node = links[n][action]
-    #             # l_num = link_num[n][action]
-    #             if next_node in dests:
-    #                 if resources_bbu[dests.index(next_node)] == 0:
-    #                     flag = 1
-    #                 else:
-    #                     flag = 0
-    #             else:
-    #                 flag = 0
-    #             if resources_edges[link_num[n][action]] == 0:
-    #                 flag = 1
-    #     self.hist_action.append((resources_edges + resources_bbu, action))
-    #     return action
-    # Not used as of 11/20/18
-    # def learn(self, current_event, next_event, reward, action, done, nlinks):
-    #     # NN
-    #     n = current_event[0]
-    #     dest = current_event[1]
-    #
-    #     n_next = next_event[0]
-    #     # dest_next = next_event[1]
-    #
-    #     future = self.q[n_next][dest][0]
-    #     for link in range(nlinks[n_next]):
-    #         if self.q[n_next][dest][link] < future:
-    #             future = self.q[n_next][dest][link]
-    #
-    #     # Q learning
-    #     self.q[n][dest][action] += \
-    #         (reward + self.config["discount"] * future - self.q[n][dest][action]) * self.config["learning_rate"]

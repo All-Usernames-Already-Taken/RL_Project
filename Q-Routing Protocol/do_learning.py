@@ -21,7 +21,7 @@ def main(speak=True):
     arrival_rate = d['arrival_rate'][0]
     learning_rate = d['learning_rate'][0]
     resources_bbu = d['resources_bbu'][0]
-    resources_edge = d['resources_edge'][0]
+    resources_edge = d['resources_edge'][0]  # Num of fiber channels
     cost = d['cost'][0]
     act_func = d['act']
 
@@ -40,18 +40,25 @@ def main(speak=True):
     env.cost = cost
 
     # cg: set up agents for every node
+    # The following code line gives 13 for 30 and 10, bbu and edge resources respectively.
+    # Adding arrays means we get a larger component-wise array
     n_features = len(env.resources_bbu + env.resources_edges)
 
     done = False
     for nodes in range(0, env.total_nodes):
+        """
+        Create a list to hold lots of relevant information for each agent at their respective nodes. 
+        The relevant information has those method names given in the q_agent.py script.
+        There are 37 objects in these lists as of 11/20/2018.
+        """
         agent_list.append(
             NetworkTabularQAgent(
                 env.total_nodes,
                 env.total_edges,
                 nodes,
-                env.total_local_connections,
-                env.links,
-                env.absolute_nodes_connected_to_absolute_edges,
+                env.total_edges_from_node,
+                env.node_to_node,
+                env.absolute_node_absolute_edge_tuples,
                 env.bbu_connected_nodes,
                 n_features,
                 learning_rate,
@@ -113,9 +120,9 @@ def main(speak=True):
         # (routed_packets, send fails, average number of hops, average completion time, max completion time)
         # Learn/backpropagation
 
-    pred_file = 'predictions' + test_file.split('.txt')[0]
+    predictive_file = 'predictions' + test_file.split('.txt')[0]
     data = np.array(data)
-    with open(pred_file, 'wb') as outfile:
+    with open(predictive_file, 'wb') as outfile:
 
         # outfile.write('# Array shape: {0}\n'.format(data.shape))
         # Iterating through n-D array produces slices along the last axis.
