@@ -26,11 +26,11 @@ class Event:
         self.birth = time
         self.event_time = time
         self.hops = 0
-        self.queue_time = 0
+        self.q_time = 0
         self.node = src
 
         # ?! --> cg: need to add status for lifetime in bbu site,
-        # ?! -->need to add status for path taken, and which bbu resource used
+        # ?! --> need to add status for path taken, and which bbu resource used
 
         self.resources = []
         self.lifetime = 10
@@ -86,7 +86,7 @@ class NetworkSimulatorEnv(gym.Env, ABC):
         current_time = current_event.event_time
         current_node = current_event.node
 
-        # time_in_queue = current_time - current_event.queue_time - self.internode
+        # time_in_queue = current_time - current_event.q_time - self.internode
 
         # if the link wasnt good
         if action < 0 or action not in self.node_to_node[current_node]:
@@ -129,9 +129,9 @@ class NetworkSimulatorEnv(gym.Env, ABC):
 
                 # ?! --> cg:add this completed route to history log
                 current_event.destination = next_node
-                current_event.queue_time += 0.05
-                current_event.queue_time += 2.7
-                self.history_queue.append((current_event.event_time, current_event.queue_time))
+                current_event.q_time += 0.05
+                current_event.q_time += 2.7
+                self.history_queue.append((current_event.event_time, current_event.q_time))
                 ###
 
                 # ?! --> cg: add Event to system for when the item is suppose to leave
@@ -155,12 +155,12 @@ class NetworkSimulatorEnv(gym.Env, ABC):
 
                 # add (source,action) to history of path
 
-                current_event.queue_time += 0.05
+                current_event.q_time += 0.05
                 next_time = current_event.event_time + .05
                 current_event.event_time = next_time
                 # self.enqueued[next_node] = next_time
 
-                # current_event.queue_time = current_time
+                # current_event.q_time = current_time
                 self.events += 1
                 heappush(self.event_queue, ((current_time, -self.events), current_event))
                 self.current_event = self.get_new_packet_bump()
@@ -194,7 +194,7 @@ class NetworkSimulatorEnv(gym.Env, ABC):
             else:
                 inject_event.event_time = -m_log(1 - random()) * float(self.call_mean)
 
-            inject_event.queue_time = 0.0
+            inject_event.q_time = 0.0
             heappush(self.event_queue, ((inject_event.event_time, -self.events), inject_event))
             self.injections += 1
             self.events += 1
@@ -267,8 +267,8 @@ class NetworkSimulatorEnv(gym.Env, ABC):
             else:
                 current_event.event_time += -m_log(1 - random()) * float(self.call_mean)
 
-            # current_event.queue_time = current_time  #cg:do i need this???
-            current_event.queue_time = 0
+            # current_event.q_time = current_time  #cg:do i need this???
+            current_event.q_time = 0
             heappush(self.event_queue, ((current_event.event_time, -self.events), current_event))
             self.events += 1
             self.injections += 1

@@ -71,16 +71,18 @@ def main(speak=True):
                 act_func
             )
         )
-    for i in range(iterations):
+
+        # Have arrival rates be nonstationary
+
+    for iteration in range(iterations):
         state_pair = env.reset()
         for t in range(time_steps):
             if not done:
                 current_state = state_pair[1]
                 n = current_state[0]
-
+                # Action is local edge
                 action = agent_list[n].act_nn2(env.resources_edges, env.resources_bbu)
                 state_pair, done = env.step(action)
-
                 if t % dumps == 0 and t > 0:
                     if speak:
                         print(
@@ -89,32 +91,32 @@ def main(speak=True):
                             "send_fail: {}\n"
                             "history queue length: {}\n"
                             "calculated_reward: {}\n\n".format(
-                                i,
+                                iteration,
                                 t,
                                 env.send_fail,
                                 len(env.history_queue),
                                 env.calculate_reward()
                             )
                         )
-                    r = env.calculate_reward()
-                    r_hist.append(r)
+                    reward = env.calculate_reward()
+                    r_hist.append(reward)
                     data.append(
-                        [i, t, len(env.history_queue), env.send_fail, r])
+                        [iteration, t, len(env.history_queue), env.send_fail, reward])
                     env.reset_history()
 
                     # calculate loss
                     for j in range(0, env.total_nodes):
                         if j not in env.bbu_connected_nodes:
-                            agent_list[j].store_transition_episode(r)
+                            agent_list[j].store_transition_episode(reward)
 
-        if i % 1 == 0:
+        if iteration % 1 == 0:
             if speak:
                 print("learning")
             for j in range(0, env.total_nodes):
                 if j not in env.bbu_connected_nodes:
                     if speak:
                         print(j)
-                    agent_list[j].learn5(i)
+                    agent_list[j].learn5(iteration)
 
         # Record statistics from iteration
         # (routed_packets, send fails, average number of hops, average completion time, max completion time)
@@ -136,8 +138,7 @@ def main(speak=True):
 
 
 def file_dictionary_extractor(file):
-    test_file = file
-    d = {}
+    test_file, d = file, {}
     with open(test_file, 'r') as f:
         for line in f.read().splitlines():
             print(line)
