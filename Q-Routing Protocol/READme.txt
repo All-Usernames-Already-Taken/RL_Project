@@ -1222,40 +1222,42 @@ heapq — Heap queue algorithm
 This module provides an implementation of the heap queue algorithm, also known as the priority queue algorithm.
 
 Heaps are arrays for which heap[k] <= heap[2*k+1] and heap[k] <= heap[2*k+2] for all k, counting elements from zero. For
-    the sake of comparison, non-existing elements are considered to be infinite. The interesting property of a heap is
-    that heap[0] is always its smallest element.
+    the sake of comparison, non-existing elements are considered to be infinite.
+The interesting property of a heap is that heap[0] is always its smallest element.
 
-The API below differs from textbook heap algorithms in two aspects: (a) We use zero-based indexing. This makes the
-    relationship between the index for a node and the indexes for its children slightly less obvious, but is more
-    suitable since Python uses zero-based indexing. (b) Our pop method returns the smallest item, not the largest
-    (called a “min heap” in textbooks; a “max heap” is more common in texts because of its suitability for in-place
-    sorting).
+The API below differs from textbook heap algorithms in two aspects:
+    (a) We use zero-based indexing. This makes the relationship between the index for a node and the indexes for its
+        children slightly less obvious, but is more suitable since Python uses zero-based indexing.
+    (b) Our pop method returns the smallest item, not the largest (called a “min heap” in textbooks; a “max heap” is
+        more common in texts because of its suitability for in-place sorting).
 
-These two make it possible to view the heap as a regular Python list without surprises: heap[0] is the smallest item,
-    and heap.sort() maintains the heap invariant!
+These two make it possible to view the heap as a regular Python list without surprises:
+    heap[0] is the smallest item, and heap.sort() maintains the heap invariant!
 
 To create a heap, use a list initialized to [], or you can transform a populated list into a heap via function heapify().
 
 The following functions are provided:
 
 heapq.heappush(heap, item)
-Push the value item onto the heap, maintaining the heap invariant.
+    Push the value item onto the heap, maintaining the heap invariant.
 heapq.heappop(heap)
-Pop and return the smallest item from the heap, maintaining the heap invariant. If the heap is empty, IndexError is
-    raised.
+    Pop and return the smallest item from the heap, maintaining the heap invariant.
+    If the heap is empty, IndexError is raised.
 heapq.heappushpop(heap, item)
-Push item on the heap, then pop and return the smallest item from the heap. The combined action runs more efficiently
-    than heappush() followed by a separate call to heappop().
+    Push item on the heap, then pop and return the smallest item from the heap.
+    The combined action runs more efficiently than heappush() followed by a separate call to heappop().
 heapq.heapify(x)
-Transform list x into a heap, in-place, in linear time.
+    Transform list x into a heap, in-place, in linear time.
 heapq.heapreplace(heap, item)
-Pop and return the smallest item from the heap, and also push the new item. The heap size doesn’t change. If the heap is
-    empty, IndexError is raised. This is more efficient than heappop() followed by heappush(), and can be more
-    appropriate when using a fixed-size heap. Note that the value returned may be larger than item! That constrains
-    reasonable uses of this routine unless written as part of a conditional replacement:
+    Pop and return the smallest item from the heap, and also push the new item. The heap size doesn’t change.
+    If the heap is empty, IndexError is raised. This is more efficient than heappop() followed by heappush(), and can be
+        more appropriate when using a fixed-size heap.
+    Note that the value returned may be larger than item! That constrains reasonable uses of this routine unless written
+        as part of a conditional replacement:
 
-if item > heap[0]:
-    item = heapreplace(heap, item)
+        if item > heap[0]:
+            item = heapreplace(heap, item)
+
 Example of use:
 
 >>> from heapq import heappush, heappop
@@ -1273,6 +1275,7 @@ Example of use:
 >>> data.sort()
 >>> data == ordered
 True
+
 Using a heap to insert items at the correct place in a priority queue:
 
 >>> heap = []
@@ -1290,20 +1293,20 @@ N
 The module also offers three general purpose functions based on heaps.
 
 heapq.merge(*iterables)
-Merge multiple sorted inputs into a single sorted output (for example, merge timestamped entries from multiple
-    log files). Returns an iterator over the sorted values.
-
-Similar to sorted(itertools.chain(*iterables)) but returns an iterable, does not pull the data into memory all at once,
-    and assumes that each of the input streams is already sorted (smallest to largest).
+    Merge multiple sorted inputs into a single sorted output (for example, merge timestamped entries from multiple
+        log files). Returns an iterator over the sorted values.
+    Similar to sorted(itertools.chain(*iterables)) but returns an iterable, does not pull the data into memory all at
+        once, and assumes that each of the input streams is already sorted (smallest to largest).
 
 heapq.nlargest(n, iterable[, key])
-Return a list with the n largest elements from the dataset defined by iterable. key, if provided, specifies a function
-    of one argument that is used to extract a comparison key from each element in the iterable: key=str.lower Equivalent
-     to: sorted(iterable, key=key, reverse=True)[:n]
+    Return a list with the n largest elements from the dataset defined by iterable. key, if provided, specifies a
+        function of one argument that is used to extract a comparison key from each element in the iterable:
+        key=str.lower Equivalent to: sorted(iterable, key=key, reverse=True)[:n]
 heapq.nsmallest(n, iterable[, key])
-Return a list with the n smallest elements from the dataset defined by iterable. key, if provided, specifies a function
-    of one argument that is used to extract a comparison key from each element in the iterable: key=str.lower Equivalent
-    to: sorted(iterable, key=key)[:n]
+    Return a list with the n smallest elements from the dataset defined by iterable. key, if provided, specifies a
+    function of one argument that is used to extract a comparison key from each element in the iterable: key=str.lower
+    Equivalent to: sorted(iterable, key=key)[:n]
+
 The latter two functions perform best for smaller values of n. For larger values, it is more efficient to use the
     sorted() function. Also, when n==1, it is more efficient to use the builtin min() and max() functions.
 

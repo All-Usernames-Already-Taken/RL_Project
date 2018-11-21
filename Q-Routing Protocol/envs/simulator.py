@@ -4,20 +4,14 @@ from collections import defaultdict
 from heapq import heappush, heappop
 from math import log as m_log
 from random import random
-
-import gym
 from numpy import zeros
+import gym
 
-# try:
-#     import Queue as Kew  # ver. < 3.0
-# except ImportError:
-#     import queue as kew
 
 events = 0
 
+
 # /* Event structure. */
-
-
 class Event:
     # Event is a fiber path usage
     def __init__(self, time, src):
@@ -37,6 +31,7 @@ class Event:
 # /* Special events. */
 """INJECT signifies adding a new packet"""
 INJECT, REPORT, END_SIM, UNKNOWN = -1, -2, -3, -4
+# What if made UNKNOWN = NA?
 #
 
 # /* Define. */
@@ -57,7 +52,7 @@ class NetworkSimulatorEnv(gym.Env, ABC):
         self.distance = []
         self.done = False
         self.edge_limit = 0
-        self.event_queue = []  # Q.PriorityQueue()
+        self.event_queue = []  # This is our heap
         self.events = 0
         self.graph_name = 'data/graph1.txt'
         self.history_queue = []
@@ -133,10 +128,12 @@ class NetworkSimulatorEnv(gym.Env, ABC):
                 current_event.q_time += 2.7
                 self.history_queue.append((current_event.event_time, current_event.q_time))
 
-                # ?! --> cg: add Event to system for when the item is suppose to leave
-                heappush(self.event_queue, ((current_time + current_event.lifetime, -self.events), current_event))
+                # ?! --> cg: add Event to system for when the item is suppose to leave # heap = ?
+                heappush(
+                    self.event_queue,
+                    ((current_time + current_event.lifetime, -self.events), current_event)
+                )
 
-                ##
                 self.current_event = self.get_new_packet_bump()
 
                 if self.current_event == NIL:
@@ -161,7 +158,10 @@ class NetworkSimulatorEnv(gym.Env, ABC):
 
                 # current_event.q_time = current_time
                 self.events += 1
-                heappush(self.event_queue, ((current_time, -self.events), current_event))
+                heappush(
+                    self.event_queue,
+                    ((current_time, -self.events), current_event)
+                )
                 self.current_event = self.get_new_packet_bump()
 
                 if self.current_event == NIL:
@@ -185,19 +185,23 @@ class NetworkSimulatorEnv(gym.Env, ABC):
         self.send_fail = 0
         self.total_routing_time = 0.0
 
+        # jl: for i in range(len(self.rrh_connected_nodes)):?
         for i in self.rrh_connected_nodes:
+            self.events += 1
+            self.injections += 1
             inject_event = Event(0.0, i)
-            inject_event.source = INJECT
+            inject_event.source, inject_event.q_time = INJECT, 0.0
             # Call mean is the lambda parameter of the poisson distribution
             if self.call_mean == 1.0:
                 inject_event.event_time = -m_log(random())
+                # Why can we just call random? Dont we have to account for a continuous time?
             else:
                 inject_event.event_time = -m_log(1 - random()) * float(self.call_mean)
 
-            inject_event.q_time = 0.0
-            heappush(self.event_queue, ((inject_event.event_time, -self.events), inject_event))
-            self.injections += 1
-            self.events += 1
+            heappush(
+                self.event_queue,
+                ((inject_event.event_time, -self.events), inject_event)
+            )
 
         self.current_event = self.get_new_packet_bump()
 
@@ -213,6 +217,7 @@ class NetworkSimulatorEnv(gym.Env, ABC):
 
         for line in graph_file:
             line_contents = line.split()
+
             if line_contents[0] == '1000':  # node declaration
                 self.total_edges_from_node[self.total_nodes] = 0
                 self.total_nodes += 1
@@ -270,7 +275,10 @@ class NetworkSimulatorEnv(gym.Env, ABC):
 
             # current_event.q_time = current_time  #cg:do i need this???
             current_event.q_time = 0
-            heappush(self.event_queue, ((current_event.event_time, -self.events), current_event))
+            heappush(
+                self.event_queue,
+                ((current_event.event_time, -self.events), current_event)
+            )
             self.events += 1
             self.injections += 1
             # cg: packet enters system at this time

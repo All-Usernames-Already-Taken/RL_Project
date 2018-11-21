@@ -11,7 +11,7 @@ def main(speak=True):
 
     time_steps = d['time_steps'][0]
     iterations = d['iterations'][0]
-    num_layers = d['number_layers'][0]
+    total_layers = d['number_layers'][0]
     layer_types = d['layer_types']
     mean_val = d['mean_value']
     std_val = d['std_val']
@@ -62,7 +62,7 @@ def main(speak=True):
                 env.bbu_connected_nodes,
                 n_features,
                 learning_rate,
-                num_layers,
+                total_layers,
                 layer_sizes,
                 layer_types,
                 mean_val,

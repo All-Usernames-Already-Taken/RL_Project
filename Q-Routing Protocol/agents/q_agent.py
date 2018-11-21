@@ -12,13 +12,13 @@ class NetworkTabularQAgent(object):
             num_nodes,
             num_actions,
             node,
-            n_links,
-            links,
-            link_num,
+            total_edges_from_node,
+            node_to_node,
+            absolute_node_absolute_edge_tuples,
             destinations,
             n_features,
             learning_rate,
-            num_layers,
+            total_layers,
             layer_size,
             layer_type,
             mean_val,
@@ -47,16 +47,16 @@ class NetworkTabularQAgent(object):
         self.hist_action = []
         self.learning_rate = learning_rate
         self.layer_type = layer_type
-        self.links = links
-        self.link_num = link_num
+        self.links = node_to_node
+        self.link_num = absolute_node_absolute_edge_tuples
         self.mean_val = mean_val
         self.node = node
-        self.n_actions = n_links[self.node]
+        self.n_actions = total_edges_from_node[self.node]
         self.n_features = n_features
-        self.n_links = n_links
+        self.n_links = total_edges_from_node
         self.num_nodes = num_nodes
         self.num_actions = num_actions
-        self.num_layers = num_layers
+        self.total_layers = total_layers
         self.q = []
         self.std_val = std_val
 
@@ -67,7 +67,7 @@ class NetworkTabularQAgent(object):
         # observations = tf.placeholder(shape=[None, self.n_actions], dtype=tf.float32)
         # actions = tf.placeholder(shape=[None], dtype=tf.float32)
         # rewards = tf.placeholder(shape=[None], dtype=tf.float32)
-        # self._build_net_auto(num_layers,layer_size,layer_type,mean_val,std_val,constant_val,activation_type)
+        # self._build_net_auto(total_layers,layer_size,layer_type,mean_val,std_val,constant_val,activation_type)
 
     @staticmethod
     def normalize_weights(x):
