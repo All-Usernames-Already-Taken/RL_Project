@@ -132,7 +132,6 @@ class NetworkSimulatorEnv(gym.Env, ABC):
                 current_event.q_time += 0.05
                 current_event.q_time += 2.7
                 self.history_queue.append((current_event.event_time, current_event.q_time))
-                ###
 
                 # ?! --> cg: add Event to system for when the item is suppose to leave
                 heappush(self.event_queue, ((current_time + current_event.lifetime, -self.events), current_event))

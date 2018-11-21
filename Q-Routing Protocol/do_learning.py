@@ -80,8 +80,7 @@ def main(speak=True):
             if not done:
                 current_state = state_pair[1]
                 n = current_state[0]
-                # Action is local edge
-                action = agent_list[n].act_nn2(env.resources_edges, env.resources_bbu)
+                action = agent_list[n].act_nn2(env.resources_edges, env.resources_bbu)  # Action is local edge
                 state_pair, done = env.step(action)
                 if t % dumps == 0 and t > 0:
                     if speak:
