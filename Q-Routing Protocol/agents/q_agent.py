@@ -4,9 +4,8 @@ import tensorflow as tf
 
 class NetworkQAgent(object):
     """
-    Agent implementing tabular Q-learning for the NetworkSimulatorEnv.
+    Agent implementing Q-learning for the NetworkSimulatorEnv.
     """
-
     def __init__(
             self,
             nodes,
@@ -103,7 +102,7 @@ class NetworkQAgent(object):
                 tf.placeholder(
                     dtype=tf.float32,
                     shape=[None, self.n_features],
-                    name="observations"
+                    name="observations2"
                 )
             self.tf_action_number = \
                 tf.placeholder(
@@ -111,14 +110,12 @@ class NetworkQAgent(object):
                     shape=[None, ],
                     name="actions_num"
                 )
-            self.tf_actions_value = \
+            self.tf_vt = \
                 tf.placeholder(
                     dtype=tf.float32,
                     shape=[None, ],
-                    name="actions_value"
+                    name=None
                 )
-        # fc1
-        # https://github.com/MorvanZhou/Reinforcement-learning-with-tensorflow/blob/master/contents/7_Policy_gradient_softmax/RL_brain.py
 
         """ 
         tf.layers.dense - 
@@ -154,6 +151,9 @@ class NetworkQAgent(object):
                 tensor the same shape as inputs except the last dimension is of size units
         """
 
+        # https://github.com/MorvanZhou/Reinforcement-learning-with-tensorflow/blob/master/contents/7_Policy_gradient_softmax/RL_brain.py
+
+        # --> Forward Connected Layer 1
         self.layer = tf.layers.dense(
             inputs=self.tf_observations,
             units=50,
@@ -171,6 +171,7 @@ class NetworkQAgent(object):
             reuse=None
         )
 
+        # --> Forward Connected Layer 2
         layer2 = tf.layers.dense(
             inputs=self.layer,
             units=25,
@@ -188,6 +189,7 @@ class NetworkQAgent(object):
             reuse=None
         )
 
+        # --> Forward Connected Layer 3
         layer3 = tf.layers.dense(
             inputs=layer2,
             units=15,
@@ -205,7 +207,7 @@ class NetworkQAgent(object):
             reuse=None
         )
 
-        # fc2
+        # --> Forward Connected Layer 4
         self.all_act = tf.layers.dense(
             inputs=layer3,
             units=self.n_actions,
@@ -243,7 +245,7 @@ class NetworkQAgent(object):
                 InvalidArgumentError: if logits is empty or axis is beyond the last dimension of logits.
         """
 
-        # use softmax to convert to probability
+        # use SoftMax to convert to probability
         self.action_probabilities = tf.nn.softmax(logits=self.all_act, axis=None, name="action_probabilities")
 
         with tf.name_scope('loss'):
@@ -297,7 +299,7 @@ class NetworkQAgent(object):
             # Reward guided loss
             self.loss = \
                 tf.reduce_mean(
-                    input_tensor=self.neg_log_prob * self.tf_actions_value,
+                    input_tensor=self.neg_log_prob * self.tf_vt,
                     axis=None,
                     keepdims=None,
                     name="reduce_mean",
@@ -429,7 +431,7 @@ class NetworkQAgent(object):
                 feed_dict={
                     self.tf_observations: x_batch,  # shape=[None, n_obs]
                     self.tf_action_number: y_batch,  # shape=[None, ]
-                    self.tf_actions_value: z_batch,  # shape=[None, ]
+                    self.tf_vt: z_batch,  # shape=[None, ]
                 },
                 options=None,
                 run_metadata=None

@@ -61,7 +61,7 @@ def main(speak=True):
                 nodes,
                 env.total_edges_from_node,
                 env.node_to_node,
-                env.absolute_node_absolute_edge_tuples,
+                env.absolute_node_edge_tuples,
                 env.bbu_connected_nodes,
                 n_features,
                 learning_rate,

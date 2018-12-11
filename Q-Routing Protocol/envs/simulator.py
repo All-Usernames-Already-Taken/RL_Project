@@ -11,9 +11,8 @@ import gym
 events = 0
 
 
-# /* Event structure. */
+# Event is fiber path usage
 class Event:
-    # Event is fiber path usage
     def __init__(self, time, src):
         self.birth = time
         self.destination = UNKNOWN
@@ -24,25 +23,18 @@ class Event:
         self.q_time = 0
         self.resources = []
         self.source = UNKNOWN
-        # ?! --> cg: need to add status for lifetime in bbu site,
         # ?! --> need to add status for path taken, and which bbu resource used
 
 
-# /* Special events. */
+# Special events
 """INJECT signifies adding a new packet"""
 INJECT, REPORT, END_SIM, UNKNOWN = -1, -2, -3, -4
-# What if made UNKNOWN = NA?
-#
-
-# /* Define. */
 NIL = Nil = -1
 
 
 class NetworkSimulatorEnv(gym.Env, ABC):
-
     def __init__(self):
-
-        self.absolute_node_absolute_edge_tuples = defaultdict(dict)
+        self.absolute_node_edge_tuples = defaultdict(dict)
         self.active_packets = 0
         self.bbu_connected_nodes = [3, 5]
         self.bbu_limit = 0
@@ -83,14 +75,14 @@ class NetworkSimulatorEnv(gym.Env, ABC):
 
         # time_in_queue = current_time - current_event.q_time - self.internode
 
-        # if the link wasnt good
+        # if the link wasn't good
         if action < 0 or action not in self.node_to_node[current_node]:
             # delete the Event
             resources_add_back = current_event.resources
             if resources_add_back:
                 for i in resources_add_back:
                     src, act = i
-                    l_num = self.absolute_node_absolute_edge_tuples[src][act]
+                    l_num = self.absolute_node_edge_tuples[src][act]
                     self.resources_edges[l_num] += 1
 
             self.current_event = self.get_new_packet_bump()
@@ -105,7 +97,7 @@ class NetworkSimulatorEnv(gym.Env, ABC):
 
         else:
             next_node = self.node_to_node[current_node][action]
-            l_num = self.absolute_node_absolute_edge_tuples[current_node][action]
+            l_num = self.absolute_node_edge_tuples[current_node][action]
             # Edge now occupied
             self.resources_edges[l_num] += -1
             current_event.hops += 1
@@ -226,11 +218,11 @@ class NetworkSimulatorEnv(gym.Env, ABC):
                 node1, node2 = int(line_contents[1]), int(line_contents[2])
 
                 self.node_to_node[node1][self.total_edges_from_node[node1]] = node2
-                self.absolute_node_absolute_edge_tuples[node1][self.total_edges_from_node[node1]] = self.total_edges
+                self.absolute_node_edge_tuples[node1][self.total_edges_from_node[node1]] = self.total_edges
                 self.total_edges_from_node[node1] = self.total_edges_from_node[node1] + 1
 
                 self.node_to_node[node2][self.total_edges_from_node[node2]] = node1
-                self.absolute_node_absolute_edge_tuples[node2][self.total_edges_from_node[node2]] = self.total_edges
+                self.absolute_node_edge_tuples[node2][self.total_edges_from_node[node2]] = self.total_edges
                 self.total_edges_from_node[node2] = self.total_edges_from_node[node2] + 1
 
                 self.total_edges += 1
@@ -254,7 +246,7 @@ class NetworkSimulatorEnv(gym.Env, ABC):
 
             for i in resources_add_back:
                 src, act = i
-                l_num = self.absolute_node_absolute_edge_tuples[src][act]
+                l_num = self.absolute_node_edge_tuples[src][act]
                 self.resources_edges[l_num] += 1
             d = current_event.destination
             self.resources_bbu[self.bbu_connected_nodes.index(d)] += 1
