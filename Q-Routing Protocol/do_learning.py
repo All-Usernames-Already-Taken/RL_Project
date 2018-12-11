@@ -3,6 +3,7 @@ from envs.simulator import NetworkSimulatorEnv
 from agents.q_agent import NetworkQAgent
 import sys
 from datetime import datetime
+import csv
 
 
 def main(speak=True):
@@ -75,45 +76,50 @@ def main(speak=True):
             )
         )
 
-        # Have arrival rates be nonstationary
+    # Have arrival rates be nonstationary
+    with open('results.csv', 'w+') as csv_file:
+        data_writer = csv.writer(csv_file, delimiter=',')
+        data_writer.writerow(
+            ['iterations', 'time_step', 'history_queue_length', 'send_fail', 'calculated_reward', 'learning']
+        )
+        for iteration in range(iterations):
+            state_pair = env.reset()
+            for t in range(time_steps):
+                if not done:
+                    current_state = state_pair[1]
+                    n = current_state[0]
+                    action = agent_list[n].act_nn2(env.resources_edges, env.resources_bbu)  # Action is local edge
+                    state_pair, done = env.step(action)
+                    if t % dumps == 0 and t > 0:
+                        reward = env.calculate_reward()
+                        r_hist.append(reward)
+                        current_information = [iteration, t, len(env.history_queue), env.send_fail, reward]
+                        data_writer.writerow(current_information)
+                        data.append(current_information)
+                        if speak:
+                            print(current_information)
+                        del current_information[:]
+                        env.reset_history()
 
-    for iteration in range(iterations):
-        state_pair = env.reset()
-        for t in range(time_steps):
-            if not done:
-                current_state = state_pair[1]
-                n = current_state[0]
-                action = agent_list[n].act_nn2(env.resources_edges, env.resources_bbu)  # Action is local edge
-                state_pair, done = env.step(action)
-                if t % dumps == 0 and t > 0:
-                    reward = env.calculate_reward()
-                    r_hist.append(reward)
-                    current_information = [iteration, t, len(env.history_queue), env.send_fail, reward]
-                    data.append(current_information)
-                    if speak:
-                        print(current_information)
-                    del current_information[:]
-                    env.reset_history()
+                        # calculate loss
+                        for node in range(0, env.total_nodes):
+                            if node not in env.bbu_connected_nodes:
+                                agent_list[node].store_transition_episode(reward)
 
-                    # calculate loss
-                    for node in range(0, env.total_nodes):
-                        if node not in env.bbu_connected_nodes:
-                            agent_list[node].store_transition_episode(reward)
+            if iteration % 1 == 0:
+                if speak:
+                    print("learning: ")
+                    learning = []
+                for j in range(0, env.total_nodes):
+                    if j not in env.bbu_connected_nodes:
+                        agent_list[j].learn5(iteration)
+                        learning.append(j)
+                if speak:
+                    print(learning, '\n')
 
-        if iteration % 1 == 0:
-            if speak:
-                print("learning: ")
-                learning = []
-            for j in range(0, env.total_nodes):
-                if j not in env.bbu_connected_nodes:
-                    agent_list[j].learn5(iteration)
-                    learning.append(j)
-            if speak:
-                print(learning, '\n')
-
-        # Record statistics from iteration
-        # (routed_packets, send fails, average number of hops, average completion time, max completion time)
-        # Learn/backpropagation
+            # Record statistics from iteration
+            # (routed_packets, send fails, average number of hops, average completion time, max completion time)
+            # Learn/backpropagation
 
     predictive_file = 'predictions' + test_file.split('.txt')[0]
     data = np.array(data)
@@ -146,16 +152,15 @@ def file_dictionary_extractor(file):
                 try:
                     value[j] = int(value[j])
                 except ValueError:
-                    print(ValueError)
                     try:
                         value[j] = float(value[j])
                     except ValueError:
-                        print(ValueError)
+                        value[j] = str(value[j])
                         pass
-                    pass
             dictionary.setdefault(key, value)
     return dictionary, test_file
 
 
+# with open('Q_Results.csv', 'rb')
 if __name__ == '__main__':
     main()
