@@ -13,7 +13,7 @@ events = 0
 
 # /* Event structure. */
 class Event:
-    # Event is a fiber path usage
+    # Event is fiber path usage
     def __init__(self, time, src):
         self.birth = time
         self.destination = UNKNOWN

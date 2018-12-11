@@ -2,19 +2,19 @@ import numpy as np
 import tensorflow as tf
 
 
-class NetworkTabularQAgent(object):
+class NetworkQAgent(object):
     """
     Agent implementing tabular Q-learning for the NetworkSimulatorEnv.
     """
 
     def __init__(
             self,
-            num_nodes,
-            num_actions,
+            nodes,
+            actions,
             node,
-            total_edges_from_node,
+            edges_from_node,
             node_to_node,
-            absolute_node_absolute_edge_tuples,
+            absolute_node_edge_tuples,
             destinations,
             n_features,
             learning_rate,
@@ -48,14 +48,14 @@ class NetworkTabularQAgent(object):
         self.learning_rate = learning_rate
         self.layer_type = layer_type
         self.links = node_to_node
-        self.link_num = absolute_node_absolute_edge_tuples
+        self.link_num = absolute_node_edge_tuples
         self.mean_val = mean_val
         self.node = node
-        self.n_actions = total_edges_from_node[self.node]
+        self.n_actions = edges_from_node[self.node]
         self.n_features = n_features
-        self.n_links = total_edges_from_node
-        self.num_nodes = num_nodes
-        self.num_actions = num_actions
+        self.n_links = edges_from_node
+        self.num_nodes = nodes
+        self.num_actions = actions
         self.total_layers = total_layers
         self.q = []
         self.std_val = std_val
@@ -72,20 +72,26 @@ class NetworkTabularQAgent(object):
     @staticmethod
     def normalize_weights(x):
         """Compute softmax values for each sets of scores in x."""
+        """?!--> ????? This is not SoftMax """
         return x / x.sum(axis=0)  # only difference
 
     @staticmethod
     def next_mini_batch(x_, y_, z_, batch_size):
-        """Create a vector with batch_size quantity of random integers; generate a mini-batch therefrom."""
-        perm = np.random.permutation(x_.shape[0])
-        perm = perm[:batch_size]
-        x_batch = x_[perm, :]
-        y_batch = y_[perm]
-        z_batch = z_[perm]
+        """""""?!--> what are these x, y, and z, representative of?"""
+        """Create a vector with batch_size quantity of random integers; generate a mini-batch therefrom???."""
+        permutation = np.random.permutation(x_.shape[0])
+        permutation = permutation[:batch_size]
+        x_batch = x_[permutation, :]
+        y_batch = y_[permutation]
+        z_batch = z_[permutation]
         return x_batch, y_batch, z_batch
 
     # called in initializer
     def _build_net(self):
+        """
+        tf.name_scope is a context manager for defining Python operations
+        tf.placeholder returns a `Tensor` that may be used as a handle for feeding a value, but not evaluated directly.
+        """
         with tf.name_scope('inputs'):
             self.tf_observations = \
                 tf.placeholder(
@@ -105,7 +111,7 @@ class NetworkTabularQAgent(object):
                     shape=[None, ],
                     name="actions_num"
                 )
-            self.tf_vt = \
+            self.tf_actions_value = \
                 tf.placeholder(
                     dtype=tf.float32,
                     shape=[None, ],
@@ -113,6 +119,41 @@ class NetworkTabularQAgent(object):
                 )
         # fc1
         # https://github.com/MorvanZhou/Reinforcement-learning-with-tensorflow/blob/master/contents/7_Policy_gradient_softmax/RL_brain.py
+
+        """ 
+        tf.layers.dense - 
+        description: 
+            Functional interface for the densely-connected layer that implements the operation: 
+            activation(inputs * kernel + bias) 
+            where activation is the activation function passed as the activation argument (if not None), kernel is a 
+            weights matrix created by the layer, and bias is a bias vector created by the layer (only if use_bias is 
+            True).
+        Inputs: 
+            inputs: Tensor input.
+            units: Integer or Long, dimensionality of the output space.
+            activation: Activation function (callable). Set it to None to maintain a linear activation.
+            use_bias: Boolean, whether the layer uses a bias.
+            kernel_initializer: Initializer function for the weight matrix. If None (default), weights are 
+                                initialized using the default initializer used by tf.get_variable.
+            bias_initializer: Initializer function for the bias.
+            kernel_regularizer: Regularizer function for the weight matrix.
+            bias_regularizer: Regularizer function for the bias.
+            activity_regularizer: Regularizer function for the output.
+            kernel_constraint: An optional projection function to be applied to the kernel after being updated by an
+                               Optimizer (e.g. used to implement norm constraints or value constraints for layer 
+                               weights). The function must take as input the unprojected variable and must return 
+                               the projected variable (which must have the same shape). Constraints are not safe to 
+                               use when doing asynchronous distributed training.
+            bias_constraint: An optional projection function to be applied to the bias after being updated by an 
+                             Optimizer.
+            trainable: Boolean, if True also add variables to the graph collection GraphKeys.TRAINABLE_VARIABLES 
+                       (see tf.Variable).
+            name: String, the name of the layer.
+            reuse: Boolean, whether to reuse the weights of a previous layer by the same name.
+        Output: 
+            tensor the same shape as inputs except the last dimension is of size units
+        """
+
         self.layer = tf.layers.dense(
             inputs=self.tf_observations,
             units=50,
@@ -129,6 +170,7 @@ class NetworkTabularQAgent(object):
             name=None,
             reuse=None
         )
+
         layer2 = tf.layers.dense(
             inputs=self.layer,
             units=25,
@@ -145,6 +187,7 @@ class NetworkTabularQAgent(object):
             name=None,
             reuse=None
         )
+
         layer3 = tf.layers.dense(
             inputs=layer2,
             units=15,
@@ -161,6 +204,7 @@ class NetworkTabularQAgent(object):
             name=None,
             reuse=None
         )
+
         # fc2
         self.all_act = tf.layers.dense(
             inputs=layer3,
@@ -208,7 +252,7 @@ class NetworkTabularQAgent(object):
             # Reward guided loss
             self.loss = \
                 tf.reduce_mean(
-                    input_tensor=self.neg_log_prob * self.tf_vt,
+                    input_tensor=self.neg_log_prob * self.tf_actions_value,
                     axis=None,
                     keepdims=None,
                     name=None,
@@ -291,7 +335,7 @@ class NetworkTabularQAgent(object):
                 feed_dict={
                     self.tf_observations: x_batch,  # shape=[None, n_obs]
                     self.tf_action_number: y_batch,  # shape=[None, ]
-                    self.tf_vt: z_batch,  # shape=[None, ]
+                    self.tf_actions_value: z_batch,  # shape=[None, ]
                 },
                 options=None,
                 run_metadata=None
