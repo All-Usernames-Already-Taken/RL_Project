@@ -37,12 +37,12 @@ class NetworkQAgent(object):
         self.activation_type = activation_type
         self.constant_val = constant_val
         self.destinations = destinations
-        self.ep_obs = []
-        self.ep_obs2 = []
-        self.ep_as = []
-        self.ep_rs = []
-        self.ep_obs_temp = []
-        self.ep_as_temp = []
+        self.episode_observation = []
+        self.episode_observation2 = []
+        self.episode_actions = []
+        self.episode_rewards = []
+        self.episode_observation_temp = []
+        self.episode_actions_temp = []
         self.hist_resources = []
         self.hist_action = []
         self.learning_rate = learning_rate
@@ -122,36 +122,36 @@ class NetworkQAgent(object):
 
         """ 
         tf.layers.dense - 
-        description: 
-            Functional interface for the densely-connected layer that implements the operation: 
-            activation(inputs * kernel + bias) 
-            where activation is the activation function passed as the activation argument (if not None), kernel is a 
-            weights matrix created by the layer, and bias is a bias vector created by the layer (only if use_bias is 
-            True).
-        Inputs: 
-            inputs: Tensor input.
-            units: Integer or Long, dimensionality of the output space.
-            activation: Activation function (callable). Set it to None to maintain a linear activation.
-            use_bias: Boolean, whether the layer uses a bias.
-            kernel_initializer: Initializer function for the weight matrix. If None (default), weights are 
-                                initialized using the default initializer used by tf.get_variable.
-            bias_initializer: Initializer function for the bias.
-            kernel_regularizer: Regularizer function for the weight matrix.
-            bias_regularizer: Regularizer function for the bias.
-            activity_regularizer: Regularizer function for the output.
-            kernel_constraint: An optional projection function to be applied to the kernel after being updated by an
-                               Optimizer (e.g. used to implement norm constraints or value constraints for layer 
-                               weights). The function must take as input the unprojected variable and must return 
-                               the projected variable (which must have the same shape). Constraints are not safe to 
-                               use when doing asynchronous distributed training.
-            bias_constraint: An optional projection function to be applied to the bias after being updated by an 
-                             Optimizer.
-            trainable: Boolean, if True also add variables to the graph collection GraphKeys.TRAINABLE_VARIABLES 
-                       (see tf.Variable).
-            name: String, the name of the layer.
-            reuse: Boolean, whether to reuse the weights of a previous layer by the same name.
-        Output: 
-            tensor the same shape as inputs except the last dimension is of size units
+            Description: 
+                Functional interface for the densely-connected layer that implements the operation: 
+                activation(inputs * kernel + bias) 
+                where activation is the activation function passed as the activation argument (if not None), kernel is a 
+                weights matrix created by the layer, and bias is a bias vector created by the layer (only if use_bias is 
+                True).
+            Inputs: 
+                inputs: Tensor input.
+                units: Integer or Long, dimensionality of the output space.
+                activation: Activation function (callable). Set it to None to maintain a linear activation.
+                use_bias: Boolean, whether the layer uses a bias.
+                kernel_initializer: Initializer function for the weight matrix. If None (default), weights are 
+                                    initialized using the default initializer used by tf.get_variable.
+                bias_initializer: Initializer function for the bias.
+                kernel_regularizer: Regularizer function for the weight matrix.
+                bias_regularizer: Regularizer function for the bias.
+                activity_regularizer: Regularizer function for the output.
+                kernel_constraint: An optional projection function to be applied to the kernel after being updated by an
+                                   Optimizer (e.g. used to implement norm constraints or value constraints for layer 
+                                   weights). The function must take as input the unprojected variable and must return 
+                                   the projected variable (which must have the same shape). Constraints are not safe to 
+                                   use when doing asynchronous distributed training.
+                bias_constraint: An optional projection function to be applied to the bias after being updated by an 
+                                 Optimizer.
+                trainable: Boolean, if True also add variables to the graph collection GraphKeys.TRAINABLE_VARIABLES 
+                           (see tf.Variable).
+                name: String, the name of the layer.
+                reuse: Boolean, whether to reuse the weights of a previous layer by the same name.
+            Output: 
+                tensor the same shape as inputs except the last dimension is of size units
         """
 
         self.layer = tf.layers.dense(
@@ -222,8 +222,29 @@ class NetworkQAgent(object):
             name=None,
             reuse=None
         )
+
+        """
+        tf.nn.softmax - 
+            Aliases:
+                tf.math.softmax
+                tf.nn.softmax
+            Description:
+                Computes softmax activations. 
+                This function performs the equivalent of softmax = tf.exp(logits) / tf.reduce_sum(tf.exp(logits), axis)
+            Args:
+                logits: A non-empty Tensor. Must be one of the following types: half, float32, float64.
+                axis: The dimension softmax would be performed on. The default is -1 which indicates the last dimension.
+                name: A name for the operation (optional).
+                dim: Deprecated alias for axis.
+            Returns:
+                A Tensor. Has the same type and shape as logits.
+        
+            Raises:
+                InvalidArgumentError: if logits is empty or axis is beyond the last dimension of logits.
+        """
+
         # use softmax to convert to probability
-        self.action_probabilities = tf.nn.softmax(logits=self.all_act, axis=None, name=None, )
+        self.action_probabilities = tf.nn.softmax(logits=self.all_act, axis=None, name="action_probabilities")
 
         with tf.name_scope('loss'):
             one_hot_tensor = \
@@ -234,19 +255,43 @@ class NetworkQAgent(object):
                     off_value=None,
                     axis=None,
                     dtype=None,
-                    name=None
+                    name="one_hot_tensor"
                 )
             neg_logarithm_action_probabilities = \
                 -tf.log(
                     x=self.action_probabilities,
-                    name=None
+                    name="negative_log_action_probabilities"
                 )
+
+            """
+            tf.math.reduce_sum
+                Aliases:
+                    tf.math.reduce_sum
+                    tf.reduce_sum
+                Description:       
+                    Computes the sum of elements across dimensions of a tensor. (deprecated arguments)
+                    Reduces input_tensor along the dimensions given in axis. Unless keepdims is true, the rank of the 
+                    tensor is reduced by 1 for each entry in axis. If keepdims is true, the reduced dimensions are 
+                    retained with length 1.
+                    If axis is None, all dimensions are reduced, and a tensor with a single element is returned.
+                Args:
+                    input_tensor: The tensor to reduce. Should have numeric type.
+                    axis: The dimensions to reduce. If None (the default), reduces all dimensions. Must be in the range
+                          [-rank(input_tensor), rank(input_tensor)).
+                    keepdims: If true, retains reduced dimensions with length 1.
+                    name: A name for the operation (optional).
+                    reduction_indices: The old (deprecated) name for axis.
+                    keep_dims: Deprecated alias for keepdims.
+                Returns:
+                    The reduced tensor, of the same dtype as the input_tensor.
+            """
+
             self.neg_log_prob = \
                 tf.reduce_sum(
                     input_tensor=neg_logarithm_action_probabilities * one_hot_tensor,
                     axis=1,
                     keepdims=None,
-                    name=None,
+                    name="reduce_sum",
                     reduction_indices=None
                 )
             # Reward guided loss
@@ -255,13 +300,63 @@ class NetworkQAgent(object):
                     input_tensor=self.neg_log_prob * self.tf_actions_value,
                     axis=None,
                     keepdims=None,
-                    name=None,
+                    name="reduce_mean",
                     reduction_indices=None
                 )
             print("Why is there a print command here, and why print help?")
 
         with tf.name_scope('train'):
             self.train_op = tf.train.AdamOptimizer(self.learning_rate).minimize(self.loss)
+
+    """
+    tf.session.run
+        Descriptions:
+            Runs operations and evaluates tensors in fetches.
+            This method runs one "step" of TensorFlow computation, by running the necessary graph fragment to execute 
+            every Operation and evaluate every Tensor in fetches, substituting the values in feed_dict for the 
+            corresponding input values.
+        Args:
+            fetches: A single graph element, a list of graph elements, or a dictionary whose values are graph elements 
+                     or lists of graph elements (described above).
+            feed_dict: A dictionary that maps graph elements to values (described above).
+            options: A [RunOptions] protocol buffer
+            run_metadata: A [RunMetadata] protocol buffer
+        Returns:
+            Either a single value if fetches is a single graph element, or a list of values if fetches is a list, or a 
+            dictionary with the same keys as fetches if that is a dictionary (described above). Order in which fetches 
+            operations are evaluated inside the call is undefined.
+
+         ***The fetches argument may be a single graph element, or an arbitrarily nested list, tuple, namedtuple, dict, 
+            or OrderedDict containing graph elements at its leaves. A graph element can be one of the following types:
+                An tf.Operation. The corresponding fetched value will be None.
+                A tf.Tensor. The corresponding fetched value will be a numpy ndarray containing the value of that tensor
+                A tf.SparseTensor. The corresponding fetched value will be a tf.SparseTensorValue containing the value 
+                    of that sparse tensor.
+                A get_tensor_handle op. The corresponding fetched value will be a numpy ndarray containing the handle of 
+                    that tensor.
+                A string which is the name of a tensor or operation in the graph.
+            
+            The value returned by run() has the same shape as the fetches argument, where the leaves are replaced by the 
+                corresponding values returned by TensorFlow.
+
+            The optional feed_dict argument allows the caller to override the value of tensors in the graph. Each key in
+                feed_dict can be one of the following types:
+                    If the key is a tf.Tensor, the value may be a Python scalar, string, list, or numpy ndarray that can 
+                        be converted to the same dtype as that tensor. Additionally, if the key is a tf.placeholder, the 
+                        shape of the value will be checked for compatibility with the placeholder.
+                    If the key is a tf.SparseTensor, the value should be a tf.SparseTensorValue.
+                    If the key is a nested tuple of Tensors or SparseTensors, the value should be a nested tuple with 
+                        the same structure that maps to their corresponding values as above.
+            Each value in feed_dict must be convertible to a numpy array of the dtype of the corresponding key.
+
+            The optional options argument expects a [RunOptions] proto. The options allow controlling the behavior of 
+                this particular step (e.g. turning tracing on).
+            
+            The optional run_metadata argument expects a [RunMetadata] proto. When appropriate, the non-Tensor output of 
+                this step will be collected there. For example, when users turn on tracing in options, the profiled info 
+                will be collected into this argument and passed back.
+
+    """
 
     def choose_action(self, observation, valid):
         prob_weights = \
@@ -300,34 +395,33 @@ class NetworkQAgent(object):
         return action
 
     def store_transition(self, state, action, reward):
-        self.ep_obs.append(state)
-        self.ep_as.append(action)
-        self.ep_rs.append(reward)
+        self.episode_observation.append(state)
+        self.episode_actions.append(action)
+        self.episode_rewards.append(reward)
 
     def store_transition_temp(self, state, action):
-        self.ep_obs_temp.append(state)
-        self.ep_as_temp.append(action)
+        self.episode_observation_temp.append(state)
+        self.episode_actions_temp.append(action)
 
     def store_transition_episode(self, reward):
-        # ?! --> is it duration though?
-        ep_as_temp = len(self.ep_as_temp)
+        ep_as_temp = len(self.episode_actions_temp)
         for i in range(0, ep_as_temp):
             self.store_transition(
-                self.ep_obs_temp[i],
-                self.ep_as_temp[i],
+                self.episode_observation_temp[i],
+                self.episode_actions_temp[i],
                 reward
             )
 
     def learn5(self, iteration):
-        ep_obs = len(self.ep_obs)
-        self.ep_obs2 = np.array(self.ep_obs).reshape(ep_obs, self.n_features)
-        discounted_ep_rs_norm = self._discount_and_norm_rewards()
+        episode_observation = len(self.episode_observation)
+        self.episode_observation2 = np.array(self.episode_observation).reshape(episode_observation, self.n_features)
+        discounted_episode_rewards_norm = self._discount_and_norm_rewards()
         x_batch, y_batch, z_batch = \
             self.next_mini_batch(
-                np.vstack(self.ep_obs2),
-                np.array(self.ep_as),
-                np.array(discounted_ep_rs_norm),
-                ep_obs
+                np.vstack(self.episode_observation2),
+                np.array(self.episode_actions),
+                np.array(discounted_episode_rewards_norm),
+                episode_observation
             )
         _, loss, log_probabilities, act_val = \
             self.session.run(
@@ -341,17 +435,17 @@ class NetworkQAgent(object):
                 run_metadata=None
             )
         if iteration % 1 == 0:
-            self.ep_obs, self.ep_as, self.ep_rs = [], [], []  # empty episode data
+            self.episode_observation, self.episode_actions, self.episode_rewards = [], [], []  # empty episode data
 
     def _discount_and_norm_rewards(self):
         self.gamma, running_add = 0, 0
-        discounted_ep_rs = np.zeros_like(self.ep_rs)
-        for t in reversed(range(0, len(self.ep_rs))):
-            running_add = running_add * self.gamma + self.ep_rs[t]
-            discounted_ep_rs[t] = running_add
-        discounted_ep_rs -= np.mean(discounted_ep_rs)
-        discounted_ep_rs /= np.std(discounted_ep_rs)
-        return discounted_ep_rs
+        discounted_episode_rewards = np.zeros_like(self.episode_rewards)
+        for t in reversed(range(0, len(self.episode_rewards))):
+            running_add = running_add * self.gamma + self.episode_rewards[t]
+            discounted_episode_rewards[t] = running_add
+        discounted_episode_rewards -= np.mean(discounted_episode_rewards)
+        discounted_episode_rewards /= np.std(discounted_episode_rewards)
+        return discounted_episode_rewards
 
     def act_nn2(self, resources_edges, resources_bbu):
         edge_bbu_sum = resources_edges + resources_bbu
