@@ -159,5 +159,9 @@ def file_dictionary_extractor(file):
     return d, test_file
 
 
+stdoutOrigin = stdout
+stdout = open("log.txt", "w")
 if __name__ == '__main__':
     main()
+stdout.close()
+stdout = stdoutOrigin
