@@ -1,7 +1,7 @@
 import numpy as np
 from envs.simulator import NetworkSimulatorEnv
 from agents.q_agent import NetworkTabularQAgent
-from sys import argv
+from sys import argv, stdout
 
 
 def main(speak=True):
