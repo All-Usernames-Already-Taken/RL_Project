@@ -24,6 +24,7 @@ class Event:
         self.resources = []
         self.source = UNKNOWN
         # ?! --> need to add status for path taken, and which bbu resource used
+        # ?! --> what are self.source and self.src that they are different?
 
 
 # Special events
@@ -164,6 +165,7 @@ class NetworkSimulatorEnv(gym.Env, ABC):
                             (self.current_event.node, self.current_event.destination)), self.done
 
     def _reset(self):
+        # self.distance, self.shortest = (zeros((0,0)),) * 2
         self.distance, self.shortest = (zeros((self.total_nodes, self.total_nodes)),) * 2
         self.done = False
         self.event_queue = []  # Q.PriorityQueue()
@@ -202,7 +204,7 @@ class NetworkSimulatorEnv(gym.Env, ABC):
 
     # Helper functions
 
-    # Initializes a packet from a random source to a random destination
+    # ?!--> is this comment reflective of the function? Initializes a signal at random node to a random destination
     def read_in_graph(self):
         self.total_nodes, self.total_edges = 0, 0
         graph_file = open(self.graph_name, "r")
@@ -210,11 +212,11 @@ class NetworkSimulatorEnv(gym.Env, ABC):
         for line in graph_file:
             line_contents = line.split()
 
-            if line_contents[0] == '1000':  # node declaration
+            if line_contents[0] == '1000':  # then the graph_file refers to a node
                 self.total_edges_from_node[self.total_nodes] = 0
                 self.total_nodes += 1
 
-            if line_contents[0] == '2000':  # edge mappings
+            if line_contents[0] == '2000':  # then the graph_file refers to connections between nodes
                 node1, node2 = int(line_contents[1]), int(line_contents[2])
 
                 self.node_to_node[node1][self.total_edges_from_node[node1]] = node2
