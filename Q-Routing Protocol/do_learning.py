@@ -74,7 +74,7 @@ def main(speak=True):
         )
 
     # Have arrival rates be nonstationary
-    with open('results.csv', 'w+') as csv_file:
+    with open('data/results-%s.csv' % start_time.strftime("%Y-%m-%d %H:%M"), 'w+') as csv_file:
         data_writer = csv.writer(csv_file, delimiter=',')
         data_writer.writerow(['episodes', 'time_step', 'history_queue_length', 'send_fail', 'calculated_reward'])
 
@@ -90,19 +90,15 @@ def main(speak=True):
                     if t % dumps == 0 and t > 0:
                         reward = environment.calculate_reward()
                         reward_history.append(reward)
-
-                        current_information = [iteration, t, len(environment.history_queue), environment.send_fail,
-                                               reward]
+                        history_queue = len(environment.history_queue)
+                        current_information = [iteration, t, history_queue, environment.send_fail, reward]
 
                         data_writer.writerow(current_information)
-
                         data.append(current_information)
 
                         if speak:
                             print(current_information)
-
                         del current_information[:]
-
                         environment.reset_history()
 
                         # calculate loss
@@ -163,6 +159,9 @@ def file_dictionary_extractor(file):
                         pass
             dictionary.setdefault(key, value)
     return dictionary, test_file
+
+
+""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 
 
 if __name__ == '__main__':
