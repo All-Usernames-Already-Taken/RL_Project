@@ -1,3 +1,6 @@
+# new text so i can commit and push
+
+
 This readme text file is intended as a cursory tensorflow help document taken from various online sources.
 
 * Note: Tensors refers to variables in tensorflow
