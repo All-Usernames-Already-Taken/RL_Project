@@ -1,16 +1,14 @@
 from agents.q_agent import NetworkQAgent
 from envs.simulator import NetworkSimulatorEnv
 from datetime import datetime
-import csv
+# import csv
 import sys
 import numpy as np
 
 
 def main(speak=True):
-    # speak = False
-    done = False
 
-    start_time = datetime.now()
+    done = False
 
     d, test_file = file_dictionary_extractor(sys.argv[1])
 
@@ -33,7 +31,8 @@ def main(speak=True):
     data, reward_history, agent_list = ([],) * 3
 
     environment = NetworkSimulatorEnv()
-    environment.reset()
+    # environment.reset()
+    environment.reset_env()
     environment.cost = cost
 
     # Poisson distributed network model
@@ -74,48 +73,54 @@ def main(speak=True):
         )
 
     # Have arrival rates be nonstationary
-    with open('data/results-%s.csv' % start_time.strftime("%Y-%m-%d %H:%M"), 'w+') as csv_file:
-        data_writer = csv.writer(csv_file, delimiter=',')
-        data_writer.writerow(['episodes', 'time_step', 'history_queue_length', 'send_fail', 'calculated_reward'])
+    # with open('data/results-%s.csv' % start_time.strftime("%Y-%m-%d %H:%M"), 'w+') as csv_file:
+    #     data_writer = csv.writer(csv_file, delimiter=',')
+    #     data_writer.writerow(['episodes', 'time_step', 'history_queue_length', 'send_fail', 'calculated_reward'])
 
-        for iteration in range(episodes):
-            state_pair = environment.reset()
-            for t in range(time_steps):
-                if not done:
-                    current_state = state_pair[1]
-                    n = current_state[0]
-                    action = agent_list[n].act_nn2(environment.resources_edges,
-                                                   environment.resources_bbu)  # Action is local edge
-                    state_pair, done = environment.step(action)
-                    if t % dumps == 0 and t > 0:
-                        reward = environment.calculate_reward()
-                        reward_history.append(reward)
-                        history_queue = len(environment.history_queue)
-                        current_information = [iteration, t, history_queue, environment.send_fail, reward]
+    for iteration in range(episodes):
+        print("Processing iteration: ", iteration)
+        state_pair = environment.reset_env()
+        started = datetime.now()
+        for t in range(time_steps):
+            if not done:
+                current_state = state_pair[1]
+                n = current_state[0]
+                action = agent_list[n].act_nn2(environment.resources_edges,
+                                               environment.resources_bbu)  # Action is local edge
+                state_pair, done = environment.step(action)
+                if t % dumps == 0 and t > 0:
+                    reward = environment.calculate_reward()
+                    reward_history.append(reward)
+                    history_queue = len(environment.history_queue)
+                    current_information = [iteration, t, history_queue, environment.send_fail, reward]
 
-                        data_writer.writerow(current_information)
-                        data.append(current_information)
+                    # data_writer.writerow(current_information)
 
-                        if speak:
-                            print(current_information)
-                        del current_information[:]
-                        environment.reset_history()
+                    data.append(current_information)
 
-                        # calculate loss
-                        for node in range(0, environment.total_nodes):
-                            if node not in environment.bbu_connected_nodes:
-                                agent_list[node].store_transition_episode(reward)
+                    # if speak:
+                    #     print(current_information)
+                    # del current_information[:]
 
-            if speak:
-                learning = []
-            if iteration % 1 == 0:
-                for j in range(0, environment.total_nodes):
-                    if j not in environment.bbu_connected_nodes:
-                        agent_list[j].learn5(iteration)
-                        if speak:
-                            learning.append(j)
-                if speak:
-                    print('learning:', learning, '\n')
+                    environment.reset_history()
+
+                    # calculate loss
+                    for node in range(0, environment.total_nodes):
+                        if node not in environment.bbu_connected_nodes:
+                            agent_list[node].store_transition_episode(reward)
+
+        print("Completed in", datetime.now() - started)
+
+        # if speak:
+        #     learning = []
+        if iteration % 1 == 0:
+            for j in range(0, environment.total_nodes):
+                if j not in environment.bbu_connected_nodes:
+                    agent_list[j].learn5(iteration)
+                    # if speak:
+                    #     learning.append(j)
+            # if speak:
+            #     print('learning:', learning, '\n')
 
             # Record statistics from iteration
             # (routed_packets, send fails, average number of hops, average completion time, max completion time)
@@ -128,8 +133,6 @@ def main(speak=True):
         # Here, data[i,:,:] is equivalent
         for data_slice in data:
             np.savetxt(outfile, data_slice[np.newaxis], fmt='%-7.2f', delimiter=',')
-
-    print(datetime.now() - start_time)
 
     # Writing out a break to indicate different slices...
     # outfile.write('# New slice\n')

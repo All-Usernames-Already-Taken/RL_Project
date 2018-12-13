@@ -5,7 +5,7 @@ This readme text file is intended as a cursory tensorflow help document taken fr
 
 * Note: Tensors refers to variables in tensorflow
 
-With tensoflow imported as tf:
+eWith tensoflow imported as tf:
 -----------------------------------------
 tf.placeholder
 

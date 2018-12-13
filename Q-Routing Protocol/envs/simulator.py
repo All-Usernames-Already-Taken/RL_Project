@@ -164,7 +164,7 @@ class NetworkSimulatorEnv(gym.Env, ABC):
                     return ((current_event.node, current_event.destination),
                             (self.current_event.node, self.current_event.destination)), self.done
 
-    def _reset(self):
+    def reset_env(self):
         # self.distance, self.shortest = (zeros((0,0)),) * 2
         self.distance, self.shortest = (zeros((self.total_nodes, self.total_nodes)),) * 2
         self.done = False

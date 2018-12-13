@@ -59,9 +59,17 @@ class NetworkQAgent(object):
         self.q = []
         self.std_val = std_val
 
-        self.session = tf.Session()
-        self._build_net()  # Model
-        self.session.run(tf.global_variables_initializer())
+        try:
+            with tf.device('/gpu:0'):
+                self._build_net()  # Model
+                self.session = tf.Session()
+                self.session.run(tf.global_variables_initializer())
+        except:
+            pass
+        else:
+            self._build_net()  # Model
+            self.session = tf.Session()
+            self.session.run(tf.global_variables_initializer())
 
         # observations = tf.placeholder(shape=[None, self.n_actions], dtype=tf.float32)
         # actions = tf.placeholder(shape=[None], dtype=tf.float32)
@@ -152,7 +160,6 @@ class NetworkQAgent(object):
         """
 
         # https://github.com/MorvanZhou/Reinforcement-learning-with-tensorflow/blob/master/contents/7_Policy_gradient_softmax/RL_brain.py
-
         # --> Forward Connected Layer 1
         self.layer = tf.layers.dense(
             inputs=self.tf_observations,
