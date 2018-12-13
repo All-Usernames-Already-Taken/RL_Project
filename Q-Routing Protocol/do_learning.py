@@ -13,7 +13,7 @@ def main(speak=True):
     start_time = datetime.now()
 
     d, test_file = file_dictionary_extractor(sys.argv[1])
-
+    #TESTING
     time_steps = d.get('time_steps')[0]
     episodes = d.get('iterations')[0]
     total_layers = d.get('number_layers')[0]
