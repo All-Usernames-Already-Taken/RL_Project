@@ -28,7 +28,9 @@ def main(speak=True):
     cost = d.get('cost')[0]
     act_func = d.get('act')
 
-    data, reward_history, agent_list = ([],) * 3
+    data = []
+    reward_history = []
+    agent_list = []
 
     environment = NetworkSimulatorEnv()
     # environment.reset()
@@ -91,8 +93,8 @@ def main(speak=True):
                 if t % dumps == 0 and t > 0:
                     reward = environment.calculate_reward()
                     reward_history.append(reward)
-                    history_queue = len(environment.history_queue)
-                    current_information = [iteration, t, history_queue, environment.send_fail, reward]
+                    history_queue_length = len(environment.history_queue)
+                    current_information = [iteration, t, history_queue_length, environment.send_fail, reward]
 
                     # data_writer.writerow(current_information)
 
