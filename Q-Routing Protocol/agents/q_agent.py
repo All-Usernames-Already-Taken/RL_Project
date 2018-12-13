@@ -238,7 +238,7 @@ class NetworkQAgent(object):
         """
 
         # use SoftMax to convert to probability
-        self.action_probabilities = tf.nn.softmax(logits=self.all_act, axis=None, name="action_probabilities")
+        self.action_probabilities = tf.nn.softmax(logits=self.all_act, name="action_probabilities")
 
         with tf.name_scope('loss'):
             one_hot_tensor = \
