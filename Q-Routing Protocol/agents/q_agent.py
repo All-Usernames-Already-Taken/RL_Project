@@ -284,7 +284,6 @@ class NetworkQAgent(object):
                 tf.reduce_sum(
                     input_tensor=neg_logarithm_action_probabilities * one_hot_tensor,
                     axis=1,
-                    keepdims=None,
                     name="reduce_sum",
                     reduction_indices=None
                 )
@@ -293,7 +292,6 @@ class NetworkQAgent(object):
                 tf.reduce_mean(
                     input_tensor=self.neg_log_prob * self.tf_vt,
                     axis=None,
-                    keepdims=None,
                     name="reduce_mean",
                     reduction_indices=None
                 )
