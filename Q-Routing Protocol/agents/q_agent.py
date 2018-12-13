@@ -2,7 +2,6 @@ import numpy as np
 import tensorflow as tf
 
 
-# SO I CAN COMMIT
 class NetworkQAgent(object):
     """
     Agent implementing Q-learning for the NetworkSimulatorEnv.
@@ -60,17 +59,9 @@ class NetworkQAgent(object):
         self.q = []
         self.std_val = std_val
 
-        try:
-            with tf.device('/gpu:0'):
-                self._build_net()  # Model
-                self.session = tf.Session()
-                self.session.run(tf.global_variables_initializer())
-        except:
-            pass
-        else:
-            self._build_net()  # Model
-            self.session = tf.Session()
-            self.session.run(tf.global_variables_initializer())
+        self.session = tf.Session()
+        self._build_net()  # Model
+        self.session.run(tf.global_variables_initializer())
 
         # observations = tf.placeholder(shape=[None, self.n_actions], dtype=tf.float32)
         # actions = tf.placeholder(shape=[None], dtype=tf.float32)
@@ -161,6 +152,7 @@ class NetworkQAgent(object):
         """
 
         # https://github.com/MorvanZhou/Reinforcement-learning-with-tensorflow/blob/master/contents/7_Policy_gradient_softmax/RL_brain.py
+
         # --> Forward Connected Layer 1
         self.layer = tf.layers.dense(
             inputs=self.tf_observations,
@@ -172,6 +164,8 @@ class NetworkQAgent(object):
             kernel_regularizer=None,
             bias_regularizer=None,
             activity_regularizer=None,
+            kernel_constraint=None,
+            bias_constraint=None,
             trainable=True,
             name=None,
             reuse=None
@@ -188,6 +182,8 @@ class NetworkQAgent(object):
             kernel_regularizer=None,
             bias_regularizer=None,
             activity_regularizer=None,
+            kernel_constraint=None,
+            bias_constraint=None,
             trainable=True,
             name=None,
             reuse=None
@@ -204,6 +200,8 @@ class NetworkQAgent(object):
             kernel_regularizer=None,
             bias_regularizer=None,
             activity_regularizer=None,
+            kernel_constraint=None,
+            bias_constraint=None,
             trainable=True,
             name=None,
             reuse=None
@@ -220,6 +218,8 @@ class NetworkQAgent(object):
             kernel_regularizer=None,
             bias_regularizer=None,
             activity_regularizer=None,
+            kernel_constraint=None,
+            bias_constraint=None,
             trainable=True,
             name=None,
             reuse=None
@@ -246,7 +246,7 @@ class NetworkQAgent(object):
         """
 
         # use SoftMax to convert to probability
-        self.action_probabilities = tf.nn.softmax(logits=self.all_act, name="action_probabilities")
+        self.action_probabilities = tf.nn.softmax(logits=self.all_act, axis=None, name="action_probabilities")
 
         with tf.name_scope('loss'):
             one_hot_tensor = \
@@ -292,6 +292,7 @@ class NetworkQAgent(object):
                 tf.reduce_sum(
                     input_tensor=neg_logarithm_action_probabilities * one_hot_tensor,
                     axis=1,
+                    keepdims=None,
                     name="reduce_sum",
                     reduction_indices=None
                 )
@@ -300,6 +301,7 @@ class NetworkQAgent(object):
                 tf.reduce_mean(
                     input_tensor=self.neg_log_prob * self.tf_vt,
                     axis=None,
+                    keepdims=None,
                     name="reduce_mean",
                     reduction_indices=None
                 )
