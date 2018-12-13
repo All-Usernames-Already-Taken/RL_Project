@@ -74,52 +74,52 @@ def main(speak=True):
         )
 
     # Have arrival rates be nonstationary
-    with open('data/results-%s.csv' % start_time.strftime("%Y-%m-%d %H:%M"), 'w+') as csv_file:
-        data_writer = csv.writer(csv_file, delimiter=',')
-        data_writer.writerow(['episodes', 'time_step', 'history_queue_length', 'send_fail', 'calculated_reward'])
+    # with open('data/results-%s.csv' % start_time.strftime("%Y-%m-%d %H:%M"), 'w+') as csv_file:
+    #     data_writer = csv.writer(csv_file, delimiter=',')
+    #     data_writer.writerow(['episodes', 'time_step', 'history_queue_length', 'send_fail', 'calculated_reward'])
 
-        for iteration in range(episodes):
-            state_pair = environment.reset()
-            for t in range(time_steps):
-                if not done:
-                    current_state = state_pair[1]
-                    n = current_state[0]
-                    action = agent_list[n].act_nn2(environment.resources_edges,
-                                                   environment.resources_bbu)  # Action is local edge
-                    state_pair, done = environment.step(action)
-                    if t % dumps == 0 and t > 0:
-                        reward = environment.calculate_reward()
-                        reward_history.append(reward)
-                        history_queue = len(environment.history_queue)
-                        current_information = [iteration, t, history_queue, environment.send_fail, reward]
+    for iteration in range(episodes):
+        state_pair = environment.reset()
+        for t in range(time_steps):
+            if not done:
+                current_state = state_pair[1]
+                n = current_state[0]
+                action = agent_list[n].act_nn2(environment.resources_edges,
+                                               environment.resources_bbu)  # Action is local edge
+                state_pair, done = environment.step(action)
+                if t % dumps == 0 and t > 0:
+                    reward = environment.calculate_reward()
+                    reward_history.append(reward)
+                    history_queue = len(environment.history_queue)
+                    current_information = [iteration, t, history_queue, environment.send_fail, reward]
 
-                        data_writer.writerow(current_information)
-                        data.append(current_information)
+                    # data_writer.writerow(current_information)
+                    data.append(current_information)
 
-                        if speak:
-                            print(current_information)
-                        del current_information[:]
-                        environment.reset_history()
+                    if speak:
+                        print(current_information)
+                    del current_information[:]
+                    environment.reset_history()
 
-                        # calculate loss
-                        for node in range(0, environment.total_nodes):
-                            if node not in environment.bbu_connected_nodes:
-                                agent_list[node].store_transition_episode(reward)
+                    # calculate loss
+                    for node in range(0, environment.total_nodes):
+                        if node not in environment.bbu_connected_nodes:
+                            agent_list[node].store_transition_episode(reward)
 
+        if speak:
+            learning = []
+        if iteration % 1 == 0:
+            for j in range(0, environment.total_nodes):
+                if j not in environment.bbu_connected_nodes:
+                    agent_list[j].learn5(iteration)
+                    if speak:
+                        learning.append(j)
             if speak:
-                learning = []
-            if iteration % 1 == 0:
-                for j in range(0, environment.total_nodes):
-                    if j not in environment.bbu_connected_nodes:
-                        agent_list[j].learn5(iteration)
-                        if speak:
-                            learning.append(j)
-                if speak:
-                    print('learning:', learning, '\n')
+                print('learning:', learning, '\n')
 
-            # Record statistics from iteration
-            # (routed_packets, send fails, average number of hops, average completion time, max completion time)
-            # Learn/backpropagation
+        # Record statistics from iteration
+        # (routed_packets, send fails, average number of hops, average completion time, max completion time)
+        # Learn/backpropagation
 
     data = np.array(data)
     with open('predictions.txt', 'wb') as outfile:

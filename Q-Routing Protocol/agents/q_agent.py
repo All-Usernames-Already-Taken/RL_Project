@@ -32,7 +32,7 @@ class NetworkQAgent(object):
             "learning_rate": 0.7,
             "eps": 0.1,  # Epsilon in epsilon greedy policies
             "discount": 1,
-            "n_iter": 10000000}  # Number of iterations
+            "n_iter": 1000}  # Number of iterations
         self.activation_type = activation_type
         self.constant_val = constant_val
         self.destinations = destinations
@@ -164,8 +164,6 @@ class NetworkQAgent(object):
             kernel_regularizer=None,
             bias_regularizer=None,
             activity_regularizer=None,
-            kernel_constraint=None,
-            bias_constraint=None,
             trainable=True,
             name=None,
             reuse=None
@@ -182,8 +180,6 @@ class NetworkQAgent(object):
             kernel_regularizer=None,
             bias_regularizer=None,
             activity_regularizer=None,
-            kernel_constraint=None,
-            bias_constraint=None,
             trainable=True,
             name=None,
             reuse=None
@@ -200,8 +196,6 @@ class NetworkQAgent(object):
             kernel_regularizer=None,
             bias_regularizer=None,
             activity_regularizer=None,
-            kernel_constraint=None,
-            bias_constraint=None,
             trainable=True,
             name=None,
             reuse=None
@@ -218,8 +212,6 @@ class NetworkQAgent(object):
             kernel_regularizer=None,
             bias_regularizer=None,
             activity_regularizer=None,
-            kernel_constraint=None,
-            bias_constraint=None,
             trainable=True,
             name=None,
             reuse=None
@@ -246,7 +238,7 @@ class NetworkQAgent(object):
         """
 
         # use SoftMax to convert to probability
-        self.action_probabilities = tf.nn.softmax(logits=self.all_act, axis=None, name="action_probabilities")
+        self.action_probabilities = tf.nn.softmax(logits=self.all_act, name="action_probabilities")
 
         with tf.name_scope('loss'):
             one_hot_tensor = \
@@ -292,7 +284,6 @@ class NetworkQAgent(object):
                 tf.reduce_sum(
                     input_tensor=neg_logarithm_action_probabilities * one_hot_tensor,
                     axis=1,
-                    keepdims=None,
                     name="reduce_sum",
                     reduction_indices=None
                 )
@@ -301,7 +292,6 @@ class NetworkQAgent(object):
                 tf.reduce_mean(
                     input_tensor=self.neg_log_prob * self.tf_vt,
                     axis=None,
-                    keepdims=None,
                     name="reduce_mean",
                     reduction_indices=None
                 )
