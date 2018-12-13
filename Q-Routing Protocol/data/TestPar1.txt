@@ -1,6 +1,6 @@
 file_name: test1
 time_steps: 2001
-iterations: 200
+iterations: 2000
 number_layers: 3
 layer_types: first, middle, last
 layer_sizes: 40, 20, 13
