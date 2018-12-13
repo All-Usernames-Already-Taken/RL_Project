@@ -164,8 +164,6 @@ class NetworkQAgent(object):
             kernel_regularizer=None,
             bias_regularizer=None,
             activity_regularizer=None,
-            # kernel_constraint=None,
-            bias_constraint=None,
             trainable=True,
             name=None,
             reuse=None
@@ -182,8 +180,6 @@ class NetworkQAgent(object):
             kernel_regularizer=None,
             bias_regularizer=None,
             activity_regularizer=None,
-            # kernel_constraint=None,
-            bias_constraint=None,
             trainable=True,
             name=None,
             reuse=None
@@ -200,8 +196,6 @@ class NetworkQAgent(object):
             kernel_regularizer=None,
             bias_regularizer=None,
             activity_regularizer=None,
-            # kernel_constraint=None,
-            bias_constraint=None,
             trainable=True,
             name=None,
             reuse=None
@@ -218,8 +212,6 @@ class NetworkQAgent(object):
             kernel_regularizer=None,
             bias_regularizer=None,
             activity_regularizer=None,
-            # kernel_constraint=None,
-            bias_constraint=None,
             trainable=True,
             name=None,
             reuse=None
