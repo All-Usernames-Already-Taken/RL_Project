@@ -1,7 +1,10 @@
 from agents.q_agent import NetworkQAgent
 from envs.simulator import NetworkSimulatorEnv
 from datetime import datetime
-# import csv
+# from output_data.data_manipulation import display_data
+import pandas as pd
+import matplotlib.pyplot as plt
+import csv
 import sys
 import numpy as np
 
@@ -97,7 +100,7 @@ def main(speak=True):
                     history_queue_length = len(environment.history_queue)
                     current_information = [iteration, t, history_queue_length, environment.send_fail, reward]
 
-                    data.append(current_information)
+                    data.append(list(current_information))
 
                     if speak:
                         print(current_information)
@@ -135,6 +138,8 @@ def main(speak=True):
         for data_slice in data:
             np.savetxt(outfile, data_slice[np.newaxis], fmt='%-7.2f', delimiter=',')
 
+    # plot_display('output_data/predictions.txt')
+
     # Writing out a break to indicate different slices...
     # outfile.write('# New slice\n')
 
@@ -163,6 +168,14 @@ def file_dictionary_extractor(file):
                         pass
             dictionary.setdefault(key, value)
     return dictionary, test_file
+
+
+# def plot_display(file):
+#     filename = file
+#     data_df = pd.read_csv(filename)
+#     reward_data = data_df['calculated_reward'].values
+#     plt.plot(reward_data)
+#     plt.show()
 
 
 """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
