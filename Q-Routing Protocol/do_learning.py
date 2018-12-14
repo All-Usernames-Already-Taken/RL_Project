@@ -78,7 +78,6 @@ def main(speak=True):
     # with open('data/results-%s.csv' % start_time.strftime("%Y-%m-%d %H:%M"), 'w+') as csv_file:
     #     data_writer = csv.writer(csv_file, delimiter=',')
     #     data_writer.writerow(['episodes', 'time_step', 'history_queue_length', 'send_fail', 'calculated_reward'])
-
     for iteration in range(episodes):
         print("Processing iteration: ", iteration)
         state_pair = environment.reset_env()
@@ -98,7 +97,7 @@ def main(speak=True):
 
                     # data_writer.writerow(current_information)
 
-                    data.append(current_information)
+                    data.append(list(current_information))
 
                     # if speak:
                     #     print(current_information)

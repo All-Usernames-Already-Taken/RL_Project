@@ -408,9 +408,11 @@ class NetworkQAgent(object):
         episode_observation = len(self.episode_observation)
         self.episode_observation2 = np.array(self.episode_observation).reshape(episode_observation, self.n_features)
         discounted_episode_rewards_norm = self._discount_and_norm_rewards()
+        # print('self.episode_observation2.shape =', self.episode_observation2.shape)
+        # print ('np.vstack(self.episode_observation2).shape =',np.vstack(self.episode_observation2).shape)
         x_batch, y_batch, z_batch = \
             self.next_mini_batch(
-                np.vstack(self.episode_observation2),
+                self.episode_observation2,
                 np.array(self.episode_actions),
                 np.array(discounted_episode_rewards_norm),
                 episode_observation
