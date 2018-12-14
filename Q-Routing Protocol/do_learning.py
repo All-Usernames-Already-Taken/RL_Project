@@ -74,10 +74,12 @@ def main(speak=True):
             )
         )
 
-    # Have arrival rates be nonstationary
-    # with open('data/results-%s.csv' % start_time.strftime("%Y-%m-%d %H:%M"), 'w+') as csv_file:
+    # Have arrival rates be non-stationary
+
+    # with open('input_data/results-%s.csv' % start_time.strftime("%Y-%m-%d %H:%M"), 'w+') as csv_file:
     #     data_writer = csv.writer(csv_file, delimiter=',')
     #     data_writer.writerow(['episodes', 'time_step', 'history_queue_length', 'send_fail', 'calculated_reward'])
+
     for iteration in range(episodes):
         print("Processing iteration: ", iteration)
         state_pair = environment.reset_env()
@@ -95,13 +97,12 @@ def main(speak=True):
                     history_queue_length = len(environment.history_queue)
                     current_information = [iteration, t, history_queue_length, environment.send_fail, reward]
 
+                    data.append(current_information)
+
+                    if speak:
+                        print(current_information)
+
                     # data_writer.writerow(current_information)
-
-                    data.append(list(current_information))
-
-                    # if speak:
-                    #     print(current_information)
-                    # del current_information[:]
 
                     environment.reset_history()
 
@@ -112,26 +113,25 @@ def main(speak=True):
 
         print("Completed in", datetime.now() - started)
 
-        # if speak:
-        #     learning = []
+        learning = []
         if iteration % 1 == 0:
             for j in range(0, environment.total_nodes):
                 if j not in environment.bbu_connected_nodes:
                     agent_list[j].learn5(iteration)
-                    # if speak:
-                    #     learning.append(j)
-            # if speak:
-            #     print('learning:', learning, '\n')
+                    if speak:
+                        learning.append(j)
+            if speak:
+                print('learning:', learning, '\n')
 
             # Record statistics from iteration
             # (routed_packets, send fails, average number of hops, average completion time, max completion time)
             # Learn/backpropagation
 
     data = np.array(data)
-    with open('predictions.txt', 'wb') as outfile:
-        # outfile.write('# Array shape: {0}\n'.format(data.shape))
+    with open('output_data/predictions.txt', 'wb') as outfile:
+        # outfile.write('# Array shape: {0}\n'.format(input_data.shape))
         # Iterating through n-D array produces slices along the last axis.
-        # Here, data[i,:,:] is equivalent
+        # Here, input_data[i,:,:] is equivalent
         for data_slice in data:
             np.savetxt(outfile, data_slice[np.newaxis], fmt='%-7.2f', delimiter=',')
 

@@ -429,7 +429,7 @@ class NetworkQAgent(object):
                 run_metadata=None
             )
         if iteration % 1 == 0:
-            self.episode_observation, self.episode_actions, self.episode_rewards = [], [], []  # empty episode data
+            self.episode_observation, self.episode_actions, self.episode_rewards = [], [], []  # empty episode input_data
 
     def _discount_and_norm_rewards(self):
         self.gamma, running_add = 0, 0

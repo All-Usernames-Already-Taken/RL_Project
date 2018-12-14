@@ -47,7 +47,7 @@ class NetworkSimulatorEnv(gym.Env, ABC):
         self.edge_limit = 0
         self.event_queue = []  # This is our heap
         self.events = 0
-        self.graph_name = 'data/graph1.txt'
+        self.graph_name = 'input_data/graph1.txt'
         self.history_queue = []
         self.injections = 0
         self.next_destination = 0
