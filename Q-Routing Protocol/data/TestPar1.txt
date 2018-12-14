@@ -1,5 +1,5 @@
 file_name: test1
-time_steps: 2001
+time_steps: 30
 iterations: 2000
 number_layers: 3
 layer_types: first, middle, last
