@@ -66,6 +66,8 @@ class NetworkSimulatorEnv(gym.Env, ABC):
         self.success_count = 0
         self.shortest = []
         self.viewer = None
+        self.resources_bbu = []
+        self.resources_edges = []
 
     def _step(self, action):
         # if(self.total_routing_time/self.routed_packets < 10): #totally random, need change
@@ -166,7 +168,8 @@ class NetworkSimulatorEnv(gym.Env, ABC):
 
     def reset_env(self):
         # self.distance, self.shortest = (zeros((0,0)),) * 2
-        self.distance, self.shortest = (zeros((self.total_nodes, self.total_nodes)),) * 2
+        self.distance = zeros((self.total_nodes, self.total_nodes))
+        self.shortest = zeros((self.total_nodes, self.total_nodes))
         self.done = False
         self.event_queue = []  # Q.PriorityQueue()
         self.events = 1
@@ -188,7 +191,7 @@ class NetworkSimulatorEnv(gym.Env, ABC):
             # Call mean is the lambda parameter of the poisson distribution
             if self.call_mean == 1.0:
                 inject_event.event_time = -m_log(random())
-                # Why can we just call random? Dont we have to account for a continuous time?
+                # Why can we just call random? Don't we have to account for a continuous time?
             else:
                 inject_event.event_time = -m_log(1 - random()) * float(self.call_mean)
 
