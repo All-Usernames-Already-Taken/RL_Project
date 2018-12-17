@@ -447,8 +447,7 @@ class NetworkQAgent(object):
         print('storing: (edge_bbu_sum, action) = ', environment_resources_state, action)
         self.store_transition_temp(environment_resources_state, action)
         next_node = self.links.get(self.node)[action]
-        # l_num = self.link_num[self.node][action]
-        # if edge_resources_list[self.link_num[self.node][action]] == 0:
+        # !? --> if there are no channels in the fiber left, shouldnt we do nothing?
         if edge_resources_list[self.link_num.get(self.node)[action]] == 0:
             # action = -1
             action = INJECT
