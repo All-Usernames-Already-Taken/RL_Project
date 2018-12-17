@@ -42,8 +42,8 @@ class NetworkQAgent(object):
         self.episode_observation2 = []
         self.episode_actions = []
         self.episode_rewards = []
-        self.episode_observation_temp = []
-        self.episode_actions_temp = []
+        self.episodes_resources_states_temporary = []
+        self.episodes_actions_temporary = []
         self.hist_resources = []
         self.hist_action = []
         self.learning_rate = learning_rate
@@ -364,7 +364,7 @@ class NetworkQAgent(object):
             )
         return action
 
-    def choose_action2(self, observation):
+    def choose_action_from_neural_net_probability_distribution(self, observation):
         action_probability_weights = \
             self.session.run(
                 fetches=self.action_probabilities,
@@ -388,15 +388,15 @@ class NetworkQAgent(object):
         self.episode_rewards.append(reward)
 
     def store_transition_temp(self, state, action):
-        self.episode_observation_temp.append(state)
-        self.episode_actions_temp.append(action)
+        self.episodes_resources_states_temporary.append(state)
+        self.episodes_actions_temporary.append(action)
 
     def store_transition_episode(self, reward):
-        ep_as_temp = len(self.episode_actions_temp)
+        ep_as_temp = len(self.episodes_actions_temporary)
         for i in range(0, ep_as_temp):
             self.store_transition(
-                self.episode_observation_temp[i],
-                self.episode_actions_temp[i],
+                self.episodes_resources_states_temporary[i],
+                self.episodes_actions_temporary[i],
                 reward
             )
 
@@ -440,10 +440,10 @@ class NetworkQAgent(object):
         print('self.episode_rewards=', np.array(self.episode_rewards),'\n discounted_episode_rewards =', discounted_episode_rewards)
         return discounted_episode_rewards
 
-    def act_nn2(self, edge_resources_list, bbu_resources_list):
+    def neural_net_action_selection(self, edge_resources_list, bbu_resources_list):
         environment_resources_state = edge_resources_list + bbu_resources_list
         environment_resources_state_np_array = np.array(environment_resources_state).reshape(1, self.n_features)
-        action = self.choose_action2(environment_resources_state_np_array)
+        action = self.choose_action_from_neural_net_probability_distribution(environment_resources_state_np_array)
         print('storing: (edge_bbu_sum, action) = ', environment_resources_state, action)
         self.store_transition_temp(environment_resources_state, action)
         next_node = self.links.get(self.node)[action]

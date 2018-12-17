@@ -1,7 +1,7 @@
-from agents.q_agent2 import NetworkQAgent,NetworkValAgent
+from agents.q_agent2 import NetworkQAgent, NetworkValAgent
 from envs.simulator import NetworkSimulatorEnv
 from datetime import datetime
-import os
+# import os
 
 # from output_data.data_manipulation import display_data
 import pandas as pd
@@ -12,7 +12,6 @@ import numpy as np
 
 
 def main(speak=True):
-
     done = False
 
     d, test_file = file_dictionary_extractor(sys.argv[1])
@@ -56,7 +55,7 @@ def main(speak=True):
         The relevant information has those method names given in the q_agent.py script.
         There are 37 objects in these lists as of 11/20/2018.
         """
-        #two agents appended to each node
+        # two agents appended to each node
         agent_list.append(
             [NetworkQAgent(
                 environment.total_nodes,
@@ -71,8 +70,7 @@ def main(speak=True):
                 layer_types,
                 mean_val,
                 std_val,
-                constant_val,
-            ),
+                constant_val),
                 NetworkValAgent(
                     environment.total_nodes,
                     nodes,
@@ -86,8 +84,9 @@ def main(speak=True):
                     layer_types,
                     mean_val,
                     std_val,
-                    constant_val,
-                )]
+                    constant_val
+                )
+            ]
         )
 
     # Have arrival rates be non-stationary
@@ -105,7 +104,8 @@ def main(speak=True):
                 current_state_destination_pair = prior_and_current_state_destination_tuples[1]
                 n = current_state_destination_pair[0]
                 # Action is local edge
-                action = agent_list[n][0].act_nn2(environment.resources_edges, environment.resources_bbu)
+                action = agent_list[n][0].neural_net_action_selection(environment.resources_edges,
+                                                                      environment.resources_bbu)
                 prior_and_current_state_destination_tuples, done = environment.step(action)
                 if t % dumps == 0 and t > 0:
                     reward = environment.calculate_reward()
@@ -163,7 +163,7 @@ def main(speak=True):
 
 def file_dictionary_extractor(file):
     test_file, dictionary = file, {}
-    print('test_file =',test_file)
+    print('test_file =', test_file)
     with open(test_file, 'r') as f:
         for line in f.read().splitlines():
             print(line)
@@ -194,7 +194,6 @@ def file_dictionary_extractor(file):
 
 
 """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
-
 
 if __name__ == '__main__':
     main()
