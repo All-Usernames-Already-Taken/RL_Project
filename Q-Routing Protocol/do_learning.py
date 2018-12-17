@@ -1,4 +1,4 @@
-from agents.q_agent2 import NetworkQAgent,NetworkValAgent
+from agents.q_agent2 import NetworkQAgent, NetworkValAgent
 from envs.simulator import NetworkSimulatorEnv
 from datetime import datetime
 import os
@@ -58,6 +58,22 @@ def main(speak=True):
         There are 37 objects in these lists as of 11/20/2018.
         """
         #two agents appended to each node
+        val_nn = NetworkValAgent(
+                    environment.total_nodes,
+                    nodes,
+                    environment.total_edges_from_node,
+                    environment.node_to_node,
+                    environment.absolute_node_edge_tuples,
+                    environment.bbu_connected_nodes,
+                    feature_set_cardinality,
+                    learning_rate,
+                    total_layers,
+                    layer_types,
+                    mean_val,
+                    std_val,
+                    constant_val,
+                )
+
         agent_list.append(
             [NetworkQAgent(
                 environment.total_nodes,
@@ -73,22 +89,10 @@ def main(speak=True):
                 mean_val,
                 std_val,
                 constant_val,
+                val_nn
             ),
-                NetworkValAgent(
-                    environment.total_nodes,
-                    nodes,
-                    environment.total_edges_from_node,
-                    environment.node_to_node,
-                    environment.absolute_node_edge_tuples,
-                    environment.bbu_connected_nodes,
-                    feature_set_cardinality,
-                    learning_rate,
-                    total_layers,
-                    layer_types,
-                    mean_val,
-                    std_val,
-                    constant_val,
-                )]
+                val_nn
+                ]
         )
 
     # Have arrival rates be non-stationary
@@ -103,11 +107,11 @@ def main(speak=True):
         started = datetime.now()
         for t in range(time_steps):
             if not done:
-                current_state = state_pair[1]
-                n = current_state[0]
-                action = agent_list[n][0].act_nn2(environment.resources_edges,
-                                               environment.resources_bbu)  # Action is local edge
+                current_node = state_pair[1]
+                n = current_node[0]
+                action = agent_list[n][0].act_nn2(environment.resources_edges,environment.resources_bbu)  # Action is local edge
                 state_pair, done = environment.step(action)
+                # val =
                 if t % dumps == 0 and t > 0:
                     reward = environment.calculate_reward()
                     reward_history.append(reward)
@@ -127,6 +131,7 @@ def main(speak=True):
                     for node in range(0, environment.total_nodes):
                         if node not in environment.bbu_connected_nodes:
                             agent_list[node][0].store_transition_episode(reward)
+                            agent_list[node][1].store_transition_episode(reward)
 
         print("Completed in", datetime.now() - started)
 
@@ -134,7 +139,7 @@ def main(speak=True):
         if iteration % 1 == 0:
             for j in range(0, environment.total_nodes):
                 if j not in environment.bbu_connected_nodes:
-                    # agent_list[j].learn_val(iteration)
+                    agent_list[j][1].learn_val(iteration)
                     agent_list[j][0].learn5(iteration)
                     if speak:
                         learning.append(j)

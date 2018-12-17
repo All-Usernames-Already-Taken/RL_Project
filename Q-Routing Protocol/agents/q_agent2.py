@@ -25,6 +25,7 @@ class NetworkQAgent(object):
             mean_val,
             std_val,
             constant_val,
+            val_nn
     ):
 
         self.config = {  # cg: reset configuration for each node in the graph
@@ -57,6 +58,7 @@ class NetworkQAgent(object):
         self.total_layers = total_layers
         self.q = []
         self.std_val = std_val
+        self.val_nn = val_nn
 
         self.session = tf.Session()
         self._build_net()  # Model
@@ -280,10 +282,17 @@ class NetworkQAgent(object):
                     name="reduce_sum",
                     reduction_indices=None
                 )
+
             # Reward guided loss
+            val = self.session.run(
+                fetches=self.val_nn.val_approx,
+                feed_dict={self.val_nn.tf_observations: self.tf_observations},
+                options=None,
+                run_metadata=None
+            )
             self.loss = \
                 tf.reduce_mean(
-                    input_tensor=self.neg_log_prob * self.tf_vt,
+                    input_tensor=self.neg_log_prob * (self.tf_vt-val),
                     axis=None,
                     name="reduce_mean",
                     reduction_indices=None
@@ -380,7 +389,6 @@ class NetworkQAgent(object):
         return action
 
     def store_transition(self, state, action, reward):
-        # print('--storing reward transition--')
         self.episode_observation.append(state)
         self.episode_actions.append(action)
         self.episode_rewards.append(reward)
@@ -399,9 +407,8 @@ class NetworkQAgent(object):
             )
 
     def learn5(self, iteration):
-        print('--learning policy--')
-        episode_observation = len(self.episode_observation)
-        self.episode_observation2 = np.array(self.episode_observation).reshape(episode_observation, self.n_features)
+        len_obs = len(self.episode_observation)
+        self.episode_observation2 = np.array(self.episode_observation).reshape(len_obs, self.n_features)
         discounted_episode_rewards_norm = self._discount_and_norm_rewards()
         # print('self.episode_observation2.shape =', self.episode_observation2.shape)
         # print ('np.vstack(self.episode_observation2).shape =',np.vstack(self.episode_observation2).shape)
@@ -410,7 +417,7 @@ class NetworkQAgent(object):
                 self.episode_observation2,
                 np.array(self.episode_actions),
                 np.array(discounted_episode_rewards_norm),
-                episode_observation
+                len_obs
             )
         _, loss, log_probabilities, act_val = \
             self.session.run(
@@ -434,15 +441,13 @@ class NetworkQAgent(object):
             discounted_episode_rewards[t] = running_add
         discounted_episode_rewards -= np.mean(discounted_episode_rewards)
         discounted_episode_rewards /= np.std(discounted_episode_rewards)
-        # print('discounting_rewards')
-        print('self.episode_rewards=', np.array(self.episode_rewards),'\n discounted_episode_rewards =', discounted_episode_rewards)
         return discounted_episode_rewards
 
     def act_nn2(self, resources_edges, resources_bbu):
-        edge_bbu_sum = resources_edges + resources_bbu
-        obs = np.array(edge_bbu_sum).reshape(1, self.n_features)
+        edge_resources = resources_edges + resources_bbu
+        obs = np.array(edge_resources).reshape(1, self.n_features)
         action = self.choose_action2(obs)
-        self.store_transition_temp(edge_bbu_sum, action)
+        self.store_transition_temp(edge_resources, action)
         next_node = self.links[self.node][action]
         # l_num = self.link_num[self.node][action]
         if resources_edges[self.link_num[self.node][action]] == 0:
@@ -451,7 +456,6 @@ class NetworkQAgent(object):
             if resources_bbu[self.destinations.index(next_node)] == 0:
                 action = -1
         return action
-
 
 class NetworkValAgent(object):
     """
@@ -718,21 +722,18 @@ class NetworkValAgent(object):
 
 
 
-    def store_transition(self, state, action, reward):
+    def store_transition(self, state, reward):
         self.episode_observation.append(state)
-        self.episode_actions.append(action)
         self.episode_rewards.append(reward)
 
-    def store_transition_temp(self, state, action):
+    def store_transition_temp(self, state):
         self.episode_observation_temp.append(state)
-        self.episode_actions_temp.append(action)
 
     def store_transition_episode(self, reward):
         ep_as_temp = len(self.episode_actions_temp)
         for i in range(0, ep_as_temp):
             self.store_transition(
                 self.episode_observation_temp[i],
-                self.episode_actions_temp[i],
                 reward
             )
     def eval_state(self,observation):
@@ -776,12 +777,13 @@ class NetworkValAgent(object):
         discounted_episode_rewards /= np.std(discounted_episode_rewards)
         return discounted_episode_rewards
 
-    def eval_nn(self,resources_edges, resources_bbu):
-        edge_bbu_sum = resources_edges + resources_bbu
-        obs = np.array(edge_bbu_sum).reshape(1, self.n_features)
+    def eval_nn(self, resources_edges, resources_bbu):
+        edge_resources = resources_edges + resources_bbu
+        obs = np.array(edge_resources).reshape(1, self.n_features)
         val = self.eval_state(obs)
-        self.store_transition_temp(edge_bbu_sum, action)
+        self.store_transition_temp(edge_resources)
 
+        return val
 
 
 
