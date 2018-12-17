@@ -24,7 +24,6 @@ def main(speak=True):
     mean_val = d.get('mean_value')[0]
     std_val = d.get('std_val')[0]
     constant_val = d.get('constant_val')[0]
-    layer_sizes = d.get('layer_sizes')
     dumps = d.get('dumps')[0]
     arrival_rate = d.get('arrival_rate')[0]
     learning_rate = d.get('learning_rate')[0]
@@ -99,15 +98,15 @@ def main(speak=True):
 
     for iteration in range(episodes):
         print("Processing iteration: ", iteration)
-        state_pair = environment.reset_env()
+        prior_and_current_state_destination_tuples = environment.reset_env()
         started = datetime.now()
         for t in range(time_steps):
             if not done:
-                current_state = state_pair[1]
-                n = current_state[0]
-                action = agent_list[n][0].act_nn2(environment.resources_edges,
-                                               environment.resources_bbu)  # Action is local edge
-                state_pair, done = environment.step(action)
+                current_state_destination_pair = prior_and_current_state_destination_tuples[1]
+                n = current_state_destination_pair[0]
+                # Action is local edge
+                action = agent_list[n][0].act_nn2(environment.resources_edges, environment.resources_bbu)
+                prior_and_current_state_destination_tuples, done = environment.step(action)
                 if t % dumps == 0 and t > 0:
                     reward = environment.calculate_reward()
                     reward_history.append(reward)

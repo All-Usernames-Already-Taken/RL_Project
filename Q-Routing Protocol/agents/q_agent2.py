@@ -4,6 +4,8 @@ import tensorflow as tf
 # TODO: Change from policy gradient to batch actor-critic - make nn's output
 # TODO: a value, then for loss, make loss the loggrad*(rew+V(s_t+1)-V(s_t)). Use nn to get s_t+1
 # TODO: http://rail.eecs.berkeley.edu/deeprlcourse-fa17/f17docs/lecture_5_actor_critic_pdf.pdf slide 21
+from envs.simulator import INJECT
+
 
 class NetworkQAgent(object):
     """
@@ -288,7 +290,7 @@ class NetworkQAgent(object):
                     name="reduce_mean",
                     reduction_indices=None
                 )
-            print("Why is there a print command here, and why print help?")
+            # print("Why is there a print command here, and why print help?")
 
         with tf.name_scope('train'):
             self.train_op = tf.train.AdamOptimizer(self.learning_rate).minimize(self.loss)
@@ -363,7 +365,7 @@ class NetworkQAgent(object):
         return action
 
     def choose_action2(self, observation):
-        prob_weights = \
+        action_probability_weights = \
             self.session.run(
                 fetches=self.action_probabilities,
                 feed_dict={self.tf_observations: observation},
@@ -372,10 +374,10 @@ class NetworkQAgent(object):
             )
         action = \
             np.random.choice(
-                a=range(prob_weights.shape[1]),
+                a=range(action_probability_weights.shape[1]),
                 size=None,
                 replace=True,
-                p=prob_weights.ravel()
+                p=action_probability_weights.ravel()
             )
         return action
 
@@ -438,18 +440,21 @@ class NetworkQAgent(object):
         print('self.episode_rewards=', np.array(self.episode_rewards),'\n discounted_episode_rewards =', discounted_episode_rewards)
         return discounted_episode_rewards
 
-    def act_nn2(self, resources_edges, resources_bbu):
-        edge_bbu_sum = resources_edges + resources_bbu
-        obs = np.array(edge_bbu_sum).reshape(1, self.n_features)
-        action = self.choose_action2(obs)
-        self.store_transition_temp(edge_bbu_sum, action)
-        next_node = self.links[self.node][action]
+    def act_nn2(self, edge_resources_list, bbu_resources_list):
+        environment_resources_state = edge_resources_list + bbu_resources_list
+        environment_resources_state_np_array = np.array(environment_resources_state).reshape(1, self.n_features)
+        action = self.choose_action2(environment_resources_state_np_array)
+        print('storing: (edge_bbu_sum, action) = ', environment_resources_state, action)
+        self.store_transition_temp(environment_resources_state, action)
+        next_node = self.links.get(self.node)[action]
         # l_num = self.link_num[self.node][action]
-        if resources_edges[self.link_num[self.node][action]] == 0:
-            action = -1
+        # if edge_resources_list[self.link_num[self.node][action]] == 0:
+        if edge_resources_list[self.link_num.get(self.node)[action]] == 0:
+            # action = -1
+            action = INJECT
         elif next_node in self.destinations:
-            if resources_bbu[self.destinations.index(next_node)] == 0:
-                action = -1
+            if bbu_resources_list[self.destinations.index(next_node)] == 0:
+                action = INJECT
         return action
 
 
@@ -716,8 +721,6 @@ class NetworkValAgent(object):
 
     """
 
-
-
     def store_transition(self, state, action, reward):
         self.episode_observation.append(state)
         self.episode_actions.append(action)
@@ -735,6 +738,7 @@ class NetworkValAgent(object):
                 self.episode_actions_temp[i],
                 reward
             )
+
     def eval_state(self,observation):
         val = self.session.run(
             fetches = self.val_approx,
@@ -743,6 +747,7 @@ class NetworkValAgent(object):
             run_metadata = None
         )
         return val
+
     def learn_val(self):
         len_obs = len(self.episode_observation)
         self.episode_observation2 = np.array(self.episode_observation).reshape(len_obs, self.n_features)

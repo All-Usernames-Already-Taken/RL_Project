@@ -31,6 +31,7 @@ class Event:
 """INJECT signifies adding a new packet"""
 INJECT, REPORT, END_SIM, UNKNOWN = -1, -2, -3, -4
 NIL = Nil = -1
+special_events = [INJECT, REPORT, END_SIM, UNKNOWN]
 
 
 class NetworkSimulatorEnv(gym.Env, ABC):
@@ -79,14 +80,14 @@ class NetworkSimulatorEnv(gym.Env, ABC):
         # time_in_queue = current_time - current_event.q_time - self.internode
 
         # if the link wasn't good
-        if action < 0 or action not in self.node_to_node[current_node]:
+        if action in special_events or action not in self.node_to_node[current_node]:
             # delete the Event
             resources_add_back = current_event.resources
             if resources_add_back:
                 for i in resources_add_back:
                     src, act = i
-                    l_num = self.absolute_node_edge_tuples[src][act]
-                    self.resources_edges[l_num] += 1
+                    link_identifier = self.absolute_node_edge_tuples[src][act]
+                    self.resources_edges[link_identifier] += 1
 
             self.current_event = self.get_new_packet_bump()
             self.send_fail = self.send_fail + 1
@@ -94,15 +95,16 @@ class NetworkSimulatorEnv(gym.Env, ABC):
             if self.current_event == NIL:
                 return ((current_event.node, current_event.destination),
                         (current_event.node, current_event.destination)), self.done
+                # return ((current_event.node, current_event.destination),)*2, self.done
             else:
                 return ((current_event.node, current_event.destination),
                         (self.current_event.node, self.current_event.destination)), self.done
 
         else:
             next_node = self.node_to_node[current_node][action]
-            l_num = self.absolute_node_edge_tuples[current_node][action]
+            link_identifier = self.absolute_node_edge_tuples[current_node][action]
             # Edge now occupied
-            self.resources_edges[l_num] += -1
+            self.resources_edges[link_identifier] += -1
             current_event.hops += 1
             current_event.resources.append((current_node, action))
             # need to check link valid if in destination or not in destination

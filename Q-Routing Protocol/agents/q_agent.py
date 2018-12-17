@@ -32,7 +32,7 @@ class NetworkQAgent(object):
             "n_iter": 1000}  # Number of iterations
         self.constant_val = constant_val
         self.destinations = destinations
-        self.episode_observation = []
+        self.observation_length = []
         self.episode_observation2 = []
         self.episode_actions = []
         self.episode_rewards = []
@@ -71,7 +71,7 @@ class NetworkQAgent(object):
 
     @staticmethod
     def next_mini_batch(x_, y_, z_, batch_size):
-        """""""?!--> what are these x, y, and z, representative of?"""
+        """?!--> what are these x, y, and z, representative of?"""
         """Create a vector with batch_size quantity of random integers; generate a mini-batch therefrom???."""
         permutation = np.random.permutation(x_.shape[0])
         permutation = permutation[:batch_size]
@@ -376,7 +376,7 @@ class NetworkQAgent(object):
         return action
 
     def store_transition(self, state, action, reward):
-        self.episode_observation.append(state)
+        self.observation_length.append(state)
         self.episode_actions.append(action)
         self.episode_rewards.append(reward)
 
@@ -394,11 +394,10 @@ class NetworkQAgent(object):
             )
 
     def learn5(self, iteration):
-        episode_observation = len(self.episode_observation)
-        self.episode_observation2 = np.array(self.episode_observation).reshape(episode_observation, self.n_features)
+        episode_observation = len(self.observation_length)
+        self.episode_observation2 = np.array(self.observation_length).reshape(episode_observation, self.n_features)
         discounted_episode_rewards_norm = self._discount_and_norm_rewards()
         # print('self.episode_observation2.shape =', self.episode_observation2.shape)
-        # print ('np.vstack(self.episode_observation2).shape =',np.vstack(self.episode_observation2).shape)
         x_batch, y_batch, z_batch = \
             self.next_mini_batch(
                 self.episode_observation2,
@@ -418,7 +417,7 @@ class NetworkQAgent(object):
                 run_metadata=None
             )
         if iteration % 1 == 0:
-            self.episode_observation, self.episode_actions, self.episode_rewards = [], [], []  # empty episode input_data
+            self.observation_length, self.episode_actions, self.episode_rewards = [], [], []  # empty episode input_data
 
     def _discount_and_norm_rewards(self):
         self.gamma, running_add = 0, 0
