@@ -444,12 +444,14 @@ class NetworkQAgent(object):
         environment_resources_state = edge_resources_list + bbu_resources_list
         environment_resources_state_np_array = np.array(environment_resources_state).reshape(1, self.n_features)
         action = self.choose_action_from_neural_net_probability_distribution(environment_resources_state_np_array)
+
         print('storing: (edge_bbu_sum, action) = ', environment_resources_state, action)
+
         self.store_transition_temp(environment_resources_state, action)
         next_node = self.links.get(self.node)[action]
+
         # !? --> if there are no channels in the fiber left, shouldnt we do nothing?
         if edge_resources_list[self.link_num.get(self.node)[action]] == 0:
-            # action = -1
             action = INJECT
         elif next_node in self.destinations:
             if bbu_resources_list[self.destinations.index(next_node)] == 0:

@@ -85,8 +85,7 @@ def main(speak=True):
                     mean_val,
                     std_val,
                     constant_val
-                )
-            ]
+                )]
         )
 
     # Have arrival rates be non-stationary
@@ -97,21 +96,21 @@ def main(speak=True):
 
     for iteration in range(episodes):
         print("Processing iteration: ", iteration)
-        prior_and_current_state_destination_tuples = environment.reset_env()
+        node_destination_tuples = environment.reset_env()
         started = datetime.now()
-        for t in range(time_steps):
+        for step in range(time_steps):
             if not done:
-                current_state_destination_pair = prior_and_current_state_destination_tuples[1]
-                n = current_state_destination_pair[0]
+                current_node_destination_pair = node_destination_tuples[1]
+                current_node = current_node_destination_pair[0]
                 # Action is local edge
-                action = agent_list[n][0].neural_net_action_selection(environment.resources_edges,
-                                                                      environment.resources_bbu)
-                prior_and_current_state_destination_tuples, done = environment.step(action)
-                if t % dumps == 0 and t > 0:
+                action = agent_list[current_node][0].neural_net_action_selection(environment.resources_edges,
+                                                                                 environment.resources_bbu)
+                node_destination_tuples, done = environment.step(action)
+                if step % dumps == 0 and step > 0:
                     reward = environment.calculate_reward()
                     reward_history.append(reward)
                     history_queue_length = len(environment.history_queue)
-                    current_information = [iteration, t, history_queue_length, environment.send_fail, reward]
+                    current_information = [iteration, step, history_queue_length, environment.send_fail, reward]
 
                     data.append(list(current_information))
 

@@ -13,18 +13,18 @@ events = 0
 
 # Event is fiber path usage
 class Event:
-    def __init__(self, time, src):
+    def __init__(self, time, source):
         self.birth = time
         self.destination = UNKNOWN
         self.event_time = time
         self.hops = 0
         self.lifetime = 10
-        self.node = src
+        self.node = source
         self.q_time = 0
         self.resources = []
         self.source = UNKNOWN
         # ?! --> need to add status for path taken, and which bbu resource used
-        # ?! --> what are self.source and self.src that they are different?
+        # ?! --> what are self.source and self.source that they are different?
 
 
 # Special events
@@ -85,25 +85,22 @@ class NetworkSimulatorEnv(gym.Env, ABC):
             resources_add_back = current_event.resources
             if resources_add_back:
                 for i in resources_add_back:
-                    src, act = i
-                    link_identifier = self.absolute_node_edge_tuples[src][act]
+                    source, act = i
+                    link_identifier = self.absolute_node_edge_tuples[source][act]
                     self.resources_edges[link_identifier] += 1
 
             self.current_event = self.get_new_packet_bump()
             self.send_fail = self.send_fail + 1
             self.active_packets -= 1
             if self.current_event == NIL:
-                return ((current_event.node, current_event.destination),
-                        (current_event.node, current_event.destination)), self.done
-                # return ((current_event.node, current_event.destination),)*2, self.done
+                return ((current_event.node, current_event.destination),) * 2, self.done
             else:
-                return ((current_event.node, current_event.destination),
-                        (self.current_event.node, self.current_event.destination)), self.done
+                return ((current_event.node, current_event.destination),) * 2, self.done
 
         else:
             next_node = self.node_to_node[current_node][action]
             link_identifier = self.absolute_node_edge_tuples[current_node][action]
-            # Edge now occupied
+            # Edge now occupied; one less channel is available in that edge
             self.resources_edges[link_identifier] += -1
             current_event.hops += 1
             current_event.resources.append((current_node, action))
@@ -134,8 +131,10 @@ class NetworkSimulatorEnv(gym.Env, ABC):
                 self.current_event = self.get_new_packet_bump()
 
                 if self.current_event == NIL:
-                    return ((current_event.node, current_event.destination),
-                            (current_event.node, current_event.destination)), self.done
+                    # return ((current_event.node, current_event.destination),
+                    #         (current_event.node, current_event.destination)), self.done
+                    return ((current_event.node, current_event.destination),) * 2, self.done
+
                 else:
                     return ((current_event.node, current_event.destination),
                             (self.current_event.node, self.current_event.destination)), self.done
@@ -143,15 +142,13 @@ class NetworkSimulatorEnv(gym.Env, ABC):
             else:
                 # cg: next node is not one of bbu units
 
-                # self.resources_edges[l_num]+=-1
                 current_event.node = next_node  # do the send!
 
                 # add (source,action) to history of path
-
                 current_event.q_time += 0.05
-                next_time = current_event.event_time + .05
-                current_event.event_time = next_time
-                # self.enqueued[next_node] = next_time
+                current_event.event_time += 0.05
+                # next_time = current_event.event_time + .05
+                # current_event.event_time = next_time
 
                 # current_event.q_time = current_time
                 self.events += 1
@@ -163,10 +160,11 @@ class NetworkSimulatorEnv(gym.Env, ABC):
 
                 if self.current_event == NIL:
                     return ((current_event.node, current_event.destination),
-                            (current_event.node, current_event.destination)), self.done, {}
+                            (current_event.node, current_event.destination)), self.done
                 else:
-                    return ((current_event.node, current_event.destination),
-                            (self.current_event.node, self.current_event.destination)), self.done
+                    # return ((current_event.node, current_event.destination),
+                    #         (self.current_event.node, self.current_event.destination)), self.done
+                    return ((current_event.node, current_event.destination),) * 2, self.done
 
     def reset_env(self):
         # self.distance, self.shortest = (zeros((0,0)),) * 2
@@ -237,12 +235,10 @@ class NetworkSimulatorEnv(gym.Env, ABC):
     def reset_history(self):
         self.send_fail, self.history_queue = 0, []
 
-    def start_packet(self, time, src):
+    def start_packet(self, time, source):
         self.active_packets = self.active_packets + 1
-        current_event = Event(time, src)
-        current_event.source = src
-        # current_event.source = current_event.node = source
-
+        current_event = Event(time, source)
+        current_event.source = source
         return current_event
 
     def get_new_packet_bump(self):
@@ -252,8 +248,8 @@ class NetworkSimulatorEnv(gym.Env, ABC):
             resources_add_back = current_event.resources  # Add resources back
 
             for i in resources_add_back:
-                src, act = i
-                l_num = self.absolute_node_edge_tuples[src][act]
+                source, act = i
+                l_num = self.absolute_node_edge_tuples[source][act]
                 self.resources_edges[l_num] += 1
             d = current_event.destination
             self.resources_bbu[self.bbu_connected_nodes.index(d)] += 1
@@ -262,12 +258,11 @@ class NetworkSimulatorEnv(gym.Env, ABC):
             # self.current_event = self.get_new_packet_bump()
 
         current_time = current_event.event_time
-        src = current_event.node
+        source = current_event.node
         # make sure the Event we're sending the state of back is not an injection
         while current_event.source == INJECT:
             # cg: edit event_time of packet to decide when next packet of that type will enter system
-            if self.call_mean == 1.0 or self.call_mean == 0.0:
-                # jl: think poisson
+            if self.call_mean in (1.0, 0.0):
                 current_event.event_time += -m_log(1 - random())
             else:
                 current_event.event_time += -m_log(1 - random()) * float(self.call_mean)
@@ -281,7 +276,7 @@ class NetworkSimulatorEnv(gym.Env, ABC):
             self.events += 1
             self.injections += 1
             # cg: packet enters system at this time
-            current_event = self.start_packet(current_time, src)
+            current_event = self.start_packet(current_time, source)
             if current_event == NIL:
                 current_event = heappop(self.event_queue)[1]
 
