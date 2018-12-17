@@ -1,6 +1,8 @@
-from agents.q_agent import NetworkQAgent
+from agents.q_agent2 import NetworkQAgent,NetworkValAgent
 from envs.simulator import NetworkSimulatorEnv
 from datetime import datetime
+import os
+
 # from output_data.data_manipulation import display_data
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -29,7 +31,6 @@ def main(speak=True):
     resources_bbu = d.get('resources_bbu')[0]
     resources_edge = d.get('resources_edge')[0]  # Number of channels per fiber
     cost = d.get('cost')[0]
-    act_func = d.get('act')
 
     data = []
     reward_history = []
@@ -57,9 +58,8 @@ def main(speak=True):
         There are 37 objects in these lists as of 11/20/2018.
         """
         agent_list.append(
-            NetworkQAgent(
+            [NetworkQAgent(
                 environment.total_nodes,
-                environment.total_edges,
                 nodes,
                 environment.total_edges_from_node,
                 environment.node_to_node,
@@ -68,13 +68,26 @@ def main(speak=True):
                 feature_set_cardinality,
                 learning_rate,
                 total_layers,
-                layer_sizes,
                 layer_types,
                 mean_val,
                 std_val,
                 constant_val,
-                act_func
-            )
+            ),
+                NetworkValAgent(
+                    environment.total_nodes,
+                    nodes,
+                    environment.total_edges_from_node,
+                    environment.node_to_node,
+                    environment.absolute_node_edge_tuples,
+                    environment.bbu_connected_nodes,
+                    feature_set_cardinality,
+                    learning_rate,
+                    total_layers,
+                    layer_types,
+                    mean_val,
+                    std_val,
+                    constant_val,
+                )]
         )
 
     # Have arrival rates be non-stationary
@@ -91,7 +104,7 @@ def main(speak=True):
             if not done:
                 current_state = state_pair[1]
                 n = current_state[0]
-                action = agent_list[n].act_nn2(environment.resources_edges,
+                action = agent_list[n][0].act_nn2(environment.resources_edges,
                                                environment.resources_bbu)  # Action is local edge
                 state_pair, done = environment.step(action)
                 if t % dumps == 0 and t > 0:
@@ -112,7 +125,7 @@ def main(speak=True):
                     # calculate loss
                     for node in range(0, environment.total_nodes):
                         if node not in environment.bbu_connected_nodes:
-                            agent_list[node].store_transition_episode(reward)
+                            agent_list[node][0].store_transition_episode(reward)
 
         print("Completed in", datetime.now() - started)
 
@@ -120,7 +133,8 @@ def main(speak=True):
         if iteration % 1 == 0:
             for j in range(0, environment.total_nodes):
                 if j not in environment.bbu_connected_nodes:
-                    agent_list[j].learn5(iteration)
+                    # agent_list[j].learn_val(iteration)
+                    agent_list[j][0].learn5(iteration)
                     if speak:
                         learning.append(j)
             if speak:
@@ -149,6 +163,7 @@ def main(speak=True):
 
 def file_dictionary_extractor(file):
     test_file, dictionary = file, {}
+    print('test_file =',test_file)
     with open(test_file, 'r') as f:
         for line in f.read().splitlines():
             print(line)
