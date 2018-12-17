@@ -380,7 +380,7 @@ class NetworkQAgent(object):
         return action
 
     def store_transition(self, state, action, reward):
-        # print('--storing reward transition--')
+        print('--storing reward transition--')
         self.episode_observation.append(state)
         self.episode_actions.append(action)
         self.episode_rewards.append(reward)
@@ -434,8 +434,8 @@ class NetworkQAgent(object):
             discounted_episode_rewards[t] = running_add
         discounted_episode_rewards -= np.mean(discounted_episode_rewards)
         discounted_episode_rewards /= np.std(discounted_episode_rewards)
-        # print('discounting_rewards')
-        print('self.episode_rewards=', np.array(self.episode_rewards),'\n discounted_episode_rewards =', discounted_episode_rewards)
+        print('discounting_rewards')
+        # print('self.episode_rewards=', np.array(self.episode_rewards),'\n discounted_episode_rewards =', discounted_episode_rewards)
         return discounted_episode_rewards
 
     def act_nn2(self, resources_edges, resources_bbu):
@@ -774,6 +774,7 @@ class NetworkValAgent(object):
             discounted_episode_rewards[t] = running_add
         discounted_episode_rewards -= np.mean(discounted_episode_rewards)
         discounted_episode_rewards /= np.std(discounted_episode_rewards)
+        print('self.episode_rewards=')
         return discounted_episode_rewards
 
     def eval_nn(self,resources_edges, resources_bbu):

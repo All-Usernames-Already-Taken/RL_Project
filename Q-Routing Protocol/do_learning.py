@@ -57,7 +57,6 @@ def main(speak=True):
         The relevant information has those method names given in the q_agent.py script.
         There are 37 objects in these lists as of 11/20/2018.
         """
-        #two agents appended to each node
         agent_list.append(
             [NetworkQAgent(
                 environment.total_nodes,
