@@ -463,9 +463,7 @@ class NetworkQAgent(object):
 
 
 class NetworkValAgent(object):
-    """
-    Agent to evaluate state of NetworkSimulatorEnv
-    """
+    """Agent to evaluate state of NetworkSimulatorEnv"""
     def __init__(
             self,
             nodes,

@@ -170,9 +170,7 @@ class networkTabularQAgent(object):
 =======
 
 class NetworkQAgent(object):
-    """
-    Agent implementing Q-learning for the NetworkSimulatorEnv.
-    """
+    """Agent implementing Q-learning for the NetworkSimulatorEnv."""
     def __init__(
             self,
             nodes,
@@ -273,40 +271,6 @@ class NetworkQAgent(object):
                     name=None
                 )
 
-        """ 
-        tf.layers.dense - 
-            Description: 
-                Functional interface for the densely-connected layer that implements the operation: 
-                activation(inputs * kernel + bias) 
-                where activation is the activation function passed as the activation argument (if not None), kernel is a 
-                weights matrix created by the layer, and bias is a bias vector created by the layer (only if use_bias is 
-                True).
-            Inputs: 
-                inputs: Tensor input.
-                units: Integer or Long, dimensionality of the output space.
-                activation: Activation function (callable). Set it to None to maintain a linear activation.
-                use_bias: Boolean, whether the layer uses a bias.
-                kernel_initializer: Initializer function for the weight matrix. If None (default), weights are 
-                                    initialized using the default initializer used by tf.get_variable.
-                bias_initializer: Initializer function for the bias.
-                kernel_regularizer: Regularizer function for the weight matrix.
-                bias_regularizer: Regularizer function for the bias.
-                activity_regularizer: Regularizer function for the output.
-                kernel_constraint: An optional projection function to be applied to the kernel after being updated by an
-                                   Optimizer (e.g. used to implement norm constraints or value constraints for layer 
-                                   weights). The function must take as input the unprojected variable and must return 
-                                   the projected variable (which must have the same shape). Constraints are not safe to 
-                                   use when doing asynchronous distributed training.
-                bias_constraint: An optional projection function to be applied to the bias after being updated by an 
-                                 Optimizer.
-                trainable: Boolean, if True also add variables to the graph collection GraphKeys.TRAINABLE_VARIABLES 
-                           (see tf.Variable).
-                name: String, the name of the layer.
-                reuse: Boolean, whether to reuse the weights of a previous layer by the same name.
-            Output: 
-                tensor the same shape as inputs except the last dimension is of size units
-        """
-
         # https://github.com/MorvanZhou/Reinforcement-learning-with-tensorflow/blob/master/contents/7_Policy_gradient_softmax/RL_brain.py
 
         # --> Forward Connected Layer 1
@@ -374,25 +338,6 @@ class NetworkQAgent(object):
             reuse=None
         )
 
-        """
-        tf.nn.softmax - 
-            Aliases:
-                tf.math.softmax
-                tf.nn.softmax
-            Description:
-                Computes softmax activations. 
-                This function performs the equivalent of softmax = tf.exp(logits) / tf.reduce_sum(tf.exp(logits), axis)
-            Args:
-                logits: A non-empty Tensor. Must be one of the following types: half, float32, float64.
-                axis: The dimension softmax would be performed on. The default is -1 which indicates the last dimension.
-                name: A name for the operation (optional).
-                dim: Deprecated alias for axis.
-            Returns:
-                A Tensor. Has the same type and shape as logits.
-        
-            Raises:
-                InvalidArgumentError: if logits is empty or axis is beyond the last dimension of logits.
-        """
 
         # use SoftMax to convert to probability
         self.action_probabilities = tf.nn.softmax(logits=self.all_act, name="action_probabilities")
@@ -414,29 +359,6 @@ class NetworkQAgent(object):
                     name="negative_log_action_probabilities"
                 )
 
-            """
-            tf.math.reduce_sum
-                Aliases:
-                    tf.math.reduce_sum
-                    tf.reduce_sum
-                Description:       
-                    Computes the sum of elements across dimensions of a tensor. (deprecated arguments)
-                    Reduces input_tensor along the dimensions given in axis. Unless keepdims is true, the rank of the 
-                    tensor is reduced by 1 for each entry in axis. If keepdims is true, the reduced dimensions are 
-                    retained with length 1.
-                    If axis is None, all dimensions are reduced, and a tensor with a single element is returned.
-                Args:
-                    input_tensor: The tensor to reduce. Should have numeric type.
-                    axis: The dimensions to reduce. If None (the default), reduces all dimensions. Must be in the range
-                          [-rank(input_tensor), rank(input_tensor)).
-                    keepdims: If true, retains reduced dimensions with length 1.
-                    name: A name for the operation (optional).
-                    reduction_indices: The old (deprecated) name for axis.
-                    keep_dims: Deprecated alias for keepdims.
-                Returns:
-                    The reduced tensor, of the same dtype as the input_tensor.
-            """
-
             self.neg_log_prob = \
                 tf.reduce_sum(
                     input_tensor=neg_logarithm_action_probabilities * one_hot_tensor,
@@ -456,56 +378,6 @@ class NetworkQAgent(object):
 
         with tf.name_scope('train'):
             self.train_op = tf.train.AdamOptimizer(self.learning_rate).minimize(self.loss)
-
-    """
-    tf.session.run
-        Descriptions:
-            Runs operations and evaluates tensors in fetches.
-            This method runs one "step" of TensorFlow computation, by running the necessary graph fragment to execute 
-            every Operation and evaluate every Tensor in fetches, substituting the values in feed_dict for the 
-            corresponding input values.
-        Args:
-            fetches: A single graph element, a list of graph elements, or a dictionary whose values are graph elements 
-                     or lists of graph elements (described above).
-            feed_dict: A dictionary that maps graph elements to values (described above).
-            options: A [RunOptions] protocol buffer
-            run_metadata: A [RunMetadata] protocol buffer
-        Returns:
-            Either a single value if fetches is a single graph element, or a list of values if fetches is a list, or a 
-            dictionary with the same keys as fetches if that is a dictionary (described above). Order in which fetches 
-            operations are evaluated inside the call is undefined.
-
-         ***The fetches argument may be a single graph element, or an arbitrarily nested list, tuple, namedtuple, dict, 
-            or OrderedDict containing graph elements at its leaves. A graph element can be one of the following types:
-                An tf.Operation. The corresponding fetched value will be None.
-                A tf.Tensor. The corresponding fetched value will be a numpy ndarray containing the value of that tensor
-                A tf.SparseTensor. The corresponding fetched value will be a tf.SparseTensorValue containing the value 
-                    of that sparse tensor.
-                A get_tensor_handle op. The corresponding fetched value will be a numpy ndarray containing the handle of 
-                    that tensor.
-                A string which is the name of a tensor or operation in the graph.
-            
-            The value returned by run() has the same shape as the fetches argument, where the leaves are replaced by the 
-                corresponding values returned by TensorFlow.
-
-            The optional feed_dict argument allows the caller to override the value of tensors in the graph. Each key in
-                feed_dict can be one of the following types:
-                    If the key is a tf.Tensor, the value may be a Python scalar, string, list, or numpy ndarray that can 
-                        be converted to the same dtype as that tensor. Additionally, if the key is a tf.placeholder, the 
-                        shape of the value will be checked for compatibility with the placeholder.
-                    If the key is a tf.SparseTensor, the value should be a tf.SparseTensorValue.
-                    If the key is a nested tuple of Tensors or SparseTensors, the value should be a nested tuple with 
-                        the same structure that maps to their corresponding values as above.
-            Each value in feed_dict must be convertible to a numpy array of the dtype of the corresponding key.
-
-            The optional options argument expects a [RunOptions] proto. The options allow controlling the behavior of 
-                this particular step (e.g. turning tracing on).
-            
-            The optional run_metadata argument expects a [RunMetadata] proto. When appropriate, the non-Tensor output of 
-                this step will be collected there. For example, when users turn on tracing in options, the profiled info 
-                will be collected into this argument and passed back.
-
-    """
 
     def choose_action(self, observation, valid):
         prob_weights = \
