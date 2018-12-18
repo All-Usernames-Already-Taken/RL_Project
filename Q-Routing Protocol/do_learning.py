@@ -6,28 +6,27 @@ from agents.q_agent2 import NetworkQAgent, NetworkValAgent
 
 
 def main(speak=True):
+
     d = file_dictionary_extractor(sys.argv[1])
     done, data, reward_history = False, [], []
 
     environment = NetworkSimulatorEnv()
     environment.reset_env()
 
+    # Poisson distributed network model; Requests enter network according to a poisson distribution
+    environment.call_mean = d.get('arrival_rate')[0]
+
     environment.cost = d.get('cost')[0]
     environment.bbu_limit = d.get('resources_bbu')[0]
     environment.edge_limit = d.get('resources_edge')[0]
 
-    # Requests enter network according to a poisson distribution
-    environment.call_mean = d.get('arrival_rate')[0]
-
     list_of_agent_objects = create_agents(d, environment)
+
+    # Have arrival rates be non-stationary
 
     for iteration in range(d.get('iterations')[0]):
         print("Processing iteration: ", iteration)
-
-        # save maybe some time on the first iteration because environment already reset
-        if iteration != 0:
-            node_destination_tuples = environment.reset_env()
-
+        node_destination_tuples = environment.reset_env()
         started = datetime.now()
 
         for step in range(d.get('time_steps')[0]):
