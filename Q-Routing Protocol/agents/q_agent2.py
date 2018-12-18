@@ -408,8 +408,6 @@ class NetworkQAgent(object):
         self.episode_observation2 = np.array(self.episode_observation).reshape(number_of_steps_in_episode,
                                                                                self.n_features)
         discounted_episode_rewards_norm = self._discount_and_norm_rewards()
-        # print('self.episode_observation2.shape =', self.episode_observation2.shape)
-        # print ('np.vstack(self.episode_observation2).shape =',np.vstack(self.episode_observation2).shape)
         x_batch, y_batch, z_batch = \
             self.next_mini_batch(
                 self.episode_observation2,
@@ -429,7 +427,8 @@ class NetworkQAgent(object):
                 run_metadata=None
             )
         if iteration % 1 == 0:
-            self.episode_observation, self.episode_actions, self.episode_rewards = [], [], []  # empty episode input_data
+            # empty episode input_data
+            self.episode_observation, self.episode_actions, self.episode_rewards = [], [], []
 
     def _discount_and_norm_rewards(self):
         self.gamma, running_add = 0, 0
@@ -440,7 +439,9 @@ class NetworkQAgent(object):
         discounted_episode_rewards -= np.mean(discounted_episode_rewards)
         discounted_episode_rewards /= np.std(discounted_episode_rewards)
         # print('discounting_rewards')
-        print('self.episode_rewards=', np.array(self.episode_rewards),'\n discounted_episode_rewards =', discounted_episode_rewards)
+        print('self.episode_rewards= {}\ndiscounted_episode_rewards = {}'.format(
+            np.array(self.episode_rewards), discounted_episode_rewards)
+        )
         return discounted_episode_rewards
 
     def neural_net_action_selection(self, edge_resources_list, bbu_resources_list):
@@ -448,7 +449,7 @@ class NetworkQAgent(object):
         environment_resources_state_np_array = np.array(environment_resources_state).reshape(1, self.n_features)
         action = self.choose_action_from_neural_net_probability_distribution(environment_resources_state_np_array)
 
-        print('storing: (edge_bbu_sum, action) = ', environment_resources_state, action)
+        print('storing: (environment_resources_state, action) = ', environment_resources_state, action)
 
         self.store_transition_temp(environment_resources_state, action)
         next_node = self.links.get(self.node)[action]
@@ -518,17 +519,11 @@ class NetworkValAgent(object):
         self._build_value_net()  # Model
         self.session.run(tf.global_variables_initializer())
 
-        # observations = tf.placeholder(shape=[None, self.n_actions], dtype=tf.float32)
-        # actions = tf.placeholder(shape=[None], dtype=tf.float32)
-        # rewards = tf.placeholder(shape=[None], dtype=tf.float32)
-        # self._build_net_auto(total_layers,layer_size,layer_type,mean_val,std_val,constant_val,activation_type)
-
     @staticmethod
     def normalize_weights(x):
         """Compute softmax values for each sets of scores in x."""
         """?!--> ????? This is not SoftMax """
         return x / x.sum(axis=0)  # only difference
-
 
     @staticmethod
     def next_mini_batch(x_, z_, batch_size):
@@ -539,9 +534,6 @@ class NetworkValAgent(object):
         x_batch = x_[permutation, :]
         z_batch = z_[permutation]
         return x_batch, z_batch
-
-
-        # https://github.com/MorvanZhou/Reinforcement-learning-with-tensorflow/blob/master/contents/7_Policy_gradient_softmax/RL_brain.py
 
     def _build_value_net(self):
         """
@@ -567,42 +559,6 @@ class NetworkValAgent(object):
                     shape=[None, ],
                     name=None
                 )
-
-        """ 
-        tf.layers.dense - 
-            Description: 
-                Functional interface for the densely-connected layer that implements the operation: 
-                activation(inputs * kernel + bias) 
-                where activation is the activation function passed as the activation argument (if not None), kernel is a 
-                weights matrix created by the layer, and bias is a bias vector created by the layer (only if use_bias is 
-                True).
-            Inputs: 
-                inputs: Tensor input.
-                units: Integer or Long, dimensionality of the output space.
-                activation: Activation function (callable). Set it to None to maintain a linear activation.
-                use_bias: Boolean, whether the layer uses a bias.
-                kernel_initializer: Initializer function for the weight matrix. If None (default), weights are 
-                                    initialized using the default initializer used by tf.get_variable.
-                bias_initializer: Initializer function for the bias.
-                kernel_regularizer: Regularizer function for the weight matrix.
-                bias_regularizer: Regularizer function for the bias.
-                activity_regularizer: Regularizer function for the output.
-                kernel_constraint: An optional projection function to be applied to the kernel after being updated by an
-                                   Optimizer (e.g. used to implement norm constraints or value constraints for layer 
-                                   weights). The function must take as input the unprojected variable and must return 
-                                   the projected variable (which must have the same shape). Constraints are not safe to 
-                                   use when doing asynchronous distributed training.
-                bias_constraint: An optional projection function to be applied to the bias after being updated by an 
-                                 Optimizer.
-                trainable: Boolean, if True also add variables to the graph collection GraphKeys.TRAINABLE_VARIABLES 
-                           (see tf.Variable).
-                name: String, the name of the layer.
-                reuse: Boolean, whether to reuse the weights of a previous layer by the same name.
-            Output: 
-                tensor the same shape as inputs except the last dimension is of size units
-        """
-
-        # https://github.com/MorvanZhou/Reinforcement-learning-with-tensorflow/blob/master/contents/7_Policy_gradient_softmax/RL_brain.py
 
         # --> Forward Connected Layer 1
         self.layer = tf.layers.dense(
@@ -655,7 +611,7 @@ class NetworkValAgent(object):
         # --> Forward Connected Layer 4
         self.val_approx = tf.layers.dense(
             inputs=layer3,
-            units = 1,
+            units=1,
             activation=tf.nn.relu,
             use_bias=True,
             kernel_initializer=tf.random_normal_initializer(mean=0, stddev=.1),
@@ -675,56 +631,6 @@ class NetworkValAgent(object):
         with tf.name_scope('train'):
             self.train_value_op = tf.train.AdamOptimizer(self.learning_rate).minimize(self.value_loss)
 
-    """
-    tf.session.run
-        Descriptions:
-            Runs operations and evaluates tensors in fetches.
-            This method runs one "step" of TensorFlow computation, by running the necessary graph fragment to execute 
-            every Operation and evaluate every Tensor in fetches, substituting the values in feed_dict for the 
-            corresponding input values.
-        Args:
-            fetches: A single graph element, a list of graph elements, or a dictionary whose values are graph elements 
-                     or lists of graph elements (described above).
-            feed_dict: A dictionary that maps graph elements to values (described above).
-            options: A [RunOptions] protocol buffer
-            run_metadata: A [RunMetadata] protocol buffer
-        Returns:
-            Either a single value if fetches is a single graph element, or a list of values if fetches is a list, or a 
-            dictionary with the same keys as fetches if that is a dictionary (described above). Order in which fetches 
-            operations are evaluated inside the call is undefined.
-
-         ***The fetches argument may be a single graph element, or an arbitrarily nested list, tuple, namedtuple, dict, 
-            or OrderedDict containing graph elements at its leaves. A graph element can be one of the following types:
-                An tf.Operation. The corresponding fetched value will be None.
-                A tf.Tensor. The corresponding fetched value will be a numpy ndarray containing the value of that tensor
-                A tf.SparseTensor. The corresponding fetched value will be a tf.SparseTensorValue containing the value 
-                    of that sparse tensor.
-                A get_tensor_handle op. The corresponding fetched value will be a numpy ndarray containing the handle of 
-                    that tensor.
-                A string which is the name of a tensor or operation in the graph.
-
-            The value returned by run() has the same shape as the fetches argument, where the leaves are replaced by the 
-                corresponding values returned by TensorFlow.
-
-            The optional feed_dict argument allows the caller to override the value of tensors in the graph. Each key in
-                feed_dict can be one of the following types:
-                    If the key is a tf.Tensor, the value may be a Python scalar, string, list, or numpy ndarray that can 
-                        be converted to the same dtype as that tensor. Additionally, if the key is a tf.placeholder, the 
-                        shape of the value will be checked for compatibility with the placeholder.
-                    If the key is a tf.SparseTensor, the value should be a tf.SparseTensorValue.
-                    If the key is a nested tuple of Tensors or SparseTensors, the value should be a nested tuple with 
-                        the same structure that maps to their corresponding values as above.
-            Each value in feed_dict must be convertible to a numpy array of the dtype of the corresponding key.
-
-            The optional options argument expects a [RunOptions] proto. The options allow controlling the behavior of 
-                this particular step (e.g. turning tracing on).
-
-            The optional run_metadata argument expects a [RunMetadata] proto. When appropriate, the non-Tensor output of 
-                this step will be collected there. For example, when users turn on tracing in options, the profiled info 
-                will be collected into this argument and passed back.
-
-    """
-
     def store_transition(self, state, action, reward):
         self.episode_observation.append(state)
         self.episode_actions.append(action)
@@ -743,12 +649,12 @@ class NetworkValAgent(object):
                 reward
             )
 
-    def eval_state(self,observation):
+    def eval_state(self, observation):
         val = self.session.run(
-            fetches = self.val_approx,
-            feed_dict = {self.tf_observations: observation},
-            options = None,
-            run_metadata = None
+            fetches=self.val_approx,
+            feed_dict={self.tf_observations: observation},
+            options=None,
+            run_metadata=None
         )
         return val
 
@@ -756,8 +662,6 @@ class NetworkValAgent(object):
         len_obs = len(self.episode_observation)
         self.episode_observation2 = np.array(self.episode_observation).reshape(len_obs, self.n_features)
         discounted_episode_rewards_norm = self._discount_and_norm_rewards()
-        # print('self.episode_observation2.shape =', self.episode_observation2.shape)
-        # print ('np.vstack(self.episode_observation2).shape =',np.vstack(self.episode_observation2).shape)
         x_batch, z_batch = \
             self.next_mini_batch(
                 self.episode_observation2,
@@ -785,12 +689,8 @@ class NetworkValAgent(object):
         discounted_episode_rewards /= np.std(discounted_episode_rewards)
         return discounted_episode_rewards
 
-    def eval_nn(self,resources_edges, resources_bbu):
-        edge_bbu_sum = resources_edges + resources_bbu
-        obs = np.array(edge_bbu_sum).reshape(1, self.n_features)
+    def eval_nn(self, edge_resources_list, bbu_resources_list):
+        environment_resources_states = edge_resources_list + bbu_resources_list
+        obs = np.array(environment_resources_states).reshape(1, self.n_features)
         val = self.eval_state(obs)
-        self.store_transition_temp(edge_bbu_sum, action)
-
-
-
-
+        self.store_transition_temp(environment_resources_states, val)
