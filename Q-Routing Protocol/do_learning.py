@@ -14,13 +14,13 @@ def main(speak=True):
     environment.reset_env()
 
     # --> Removing the next 6 lines is detrimental for some reason. If done, calculations will result in zeros, and Nans
-
     # Poisson distributed network model; Requests enter network according to a poisson distribution
     environment.call_mean = d.get('arrival_rate')[0]
     environment.cost = d.get('cost')[0]
     environment.bbu_limit = d.get('resources_bbu')[0]
     environment.edge_limit = d.get('resources_edge')[0]
 
+    # Create list to hold state action information at each node
     list_of_agent_objects = create_agents()
 
     for iteration in range(d.get('iterations')[0]):
@@ -29,6 +29,7 @@ def main(speak=True):
         started = datetime.now()
 
         for step in range(d.get('time_steps')[0]):
+            # UNLESS TERMINAL STATE REACHED
             if not done:
                 current_node_destination_pair = node_destination_tuples[1]
                 current_node = current_node_destination_pair[0]
@@ -37,6 +38,7 @@ def main(speak=True):
                                                                                             environment.resources_bbu)
                 node_destination_tuples, done = environment.step(action)
 
+                # EVERY 50 STEPS CALCULATE CUMULATIVE REWARD AND LOSS
                 if step % d.get('dumps')[0] == 0 and step > 0:
                     reward = environment.calculate_reward()
                     reward_history.append(reward)
@@ -49,7 +51,7 @@ def main(speak=True):
 
                     environment.reset_history()
 
-                    # calculate loss
+                    # CALCULATE LOSS
                     for node in range(0, environment.total_nodes):
                         if node not in environment.bbu_connected_nodes:
                             list_of_agent_objects[node][0].store_transition_episode(reward)
