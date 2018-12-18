@@ -80,7 +80,7 @@ class NetworkSimulatorEnv(gym.Env, ABC):
         # time_in_queue = current_time - current_event.q_time - self.internode
 
         # if the link wasn't good
-        if action in special_events or action not in self.node_to_node[current_node]:
+        if action in special_events or action not in self.node_to_node.get(current_node):
             # delete the Event
             resources_add_back = current_event.resources
             if resources_add_back:
@@ -103,12 +103,12 @@ class NetworkSimulatorEnv(gym.Env, ABC):
             # Edge now occupied; one less channel is available in that edge
             self.resources_edges[link_identifier] += -1
             current_event.hops += 1
-            current_event.resources.append((current_node, action))
+            current_event.resources.append((current_node, action))  # why appending current node action pair tuples
             # need to check link valid if in destination or not in destination
             # handle the case where next_node is your destination
             if next_node in self.bbu_connected_nodes:
                 # cg: next node is one of bbu units
-                # cg: check if there are enough resources at that destination
+                # cg: check if there are enough resources at that destination: THE CLAUSE DOES NOT DO THIS
                 # self.resources_edges[l_num]+=-1
                 current_event.node = next_node  # do the send!
                 self.resources_bbu[self.bbu_connected_nodes.index(next_node)] -= 1
@@ -202,8 +202,8 @@ class NetworkSimulatorEnv(gym.Env, ABC):
 
         self.current_event = self.get_new_packet_bump()
 
-        return ((self.current_event.node, self.current_event.destination),
-                (self.current_event.node, self.current_event.destination))
+        return ((self.current_event.node, self.current_event.destination),) * 2
+
 
     # Helper functions
 

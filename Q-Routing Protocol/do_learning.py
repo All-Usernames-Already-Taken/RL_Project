@@ -1,130 +1,60 @@
-from agents.q_agent2 import NetworkQAgent, NetworkValAgent
-from envs.simulator import NetworkSimulatorEnv
-from datetime import datetime
-# import os
-
-# from output_data.data_manipulation import display_data
-import pandas as pd
-import matplotlib.pyplot as plt
-import csv
 import sys
 import numpy as np
+from datetime import datetime
+from envs.simulator import NetworkSimulatorEnv
+from agents.q_agent2 import NetworkQAgent, NetworkValAgent
 
 
 def main(speak=True):
-    done = False
-
-    d, test_file = file_dictionary_extractor(sys.argv[1])
-
-    time_steps = d.get('time_steps')[0]
-    episodes = d.get('iterations')[0]
-    total_layers = d.get('number_layers')[0]
-    layer_types = d.get('layer_types')
-    mean_val = d.get('mean_value')[0]
-    std_val = d.get('std_val')[0]
-    constant_val = d.get('constant_val')[0]
-    dumps = d.get('dumps')[0]
-    arrival_rate = d.get('arrival_rate')[0]
-    learning_rate = d.get('learning_rate')[0]
-    resources_bbu = d.get('resources_bbu')[0]
-    resources_edge = d.get('resources_edge')[0]  # Number of channels per fiber
-    cost = d.get('cost')[0]
-
-    data = []
-    reward_history = []
-    agent_list = []
+    d = file_dictionary_extractor(sys.argv[1])
+    done, data, reward_history = False, [], []
 
     environment = NetworkSimulatorEnv()
-    # environment.reset()
     environment.reset_env()
-    environment.cost = cost
 
-    # Poisson distributed network model
-    environment.call_mean = arrival_rate
-    environment.bbu_limit = resources_bbu
-    environment.edge_limit = resources_edge
+    environment.cost = d.get('cost')[0]
+    environment.bbu_limit = d.get('resources_bbu')[0]
+    environment.edge_limit = d.get('resources_edge')[0]
 
-    # cg: set up agents for every node
-    # The following code line gives 13 for 30 and 10, bbu and edge resources respectively.
-    # Adding arrays means we get a larger component-wise array, not vector addition
-    feature_set_cardinality = len(environment.resources_bbu + environment.resources_edges)
+    # Requests enter network according to a poisson distribution
+    environment.call_mean = d.get('arrival_rate')[0]
 
-    for nodes in range(0, environment.total_nodes):
-        """
-        Create a list to hold lots of relevant information for each agent at their respective nodes. 
-        The relevant information has those method names given in the q_agent.py script.
-        There are 37 objects in these lists as of 11/20/2018.
-        """
-        # two agents appended to each node
-        agent_list.append(
-            [NetworkQAgent(
-                environment.total_nodes,
-                nodes,
-                environment.total_edges_from_node,
-                environment.node_to_node,
-                environment.absolute_node_edge_tuples,
-                environment.bbu_connected_nodes,
-                feature_set_cardinality,
-                learning_rate,
-                total_layers,
-                layer_types,
-                mean_val,
-                std_val,
-                constant_val),
-                NetworkValAgent(
-                    environment.total_nodes,
-                    nodes,
-                    environment.total_edges_from_node,
-                    environment.node_to_node,
-                    environment.absolute_node_edge_tuples,
-                    environment.bbu_connected_nodes,
-                    feature_set_cardinality,
-                    learning_rate,
-                    total_layers,
-                    layer_types,
-                    mean_val,
-                    std_val,
-                    constant_val
-                )]
-        )
+    list_of_agent_objects = create_agents(d, environment)
 
-    # Have arrival rates be non-stationary
-
-    # with open('input_data/results-%s.csv' % start_time.strftime("%Y-%m-%d %H:%M"), 'w+') as csv_file:
-    #     data_writer = csv.writer(csv_file, delimiter=',')
-    #     data_writer.writerow(['episodes', 'time_step', 'history_queue_length', 'send_fail', 'calculated_reward'])
-
-    for iteration in range(episodes):
+    for iteration in range(d.get('iterations')[0]):
         print("Processing iteration: ", iteration)
-        node_destination_tuples = environment.reset_env()
+
+        # save maybe some time on the first iteration because environment already reset
+        if iteration != 0:
+            node_destination_tuples = environment.reset_env()
+
         started = datetime.now()
-        for step in range(time_steps):
+
+        for step in range(d.get('time_steps')[0]):
             if not done:
                 current_node_destination_pair = node_destination_tuples[1]
                 current_node = current_node_destination_pair[0]
                 # Action is local edge
-                action = agent_list[current_node][0].neural_net_action_selection(environment.resources_edges,
-                                                                                 environment.resources_bbu)
+                action = list_of_agent_objects[current_node][0].neural_net_action_selection(environment.resources_edges,
+                                                                                            environment.resources_bbu)
                 node_destination_tuples, done = environment.step(action)
-                if step % dumps == 0 and step > 0:
+
+                if step % d.get('dumps')[0] == 0 and step > 0:
                     reward = environment.calculate_reward()
                     reward_history.append(reward)
                     history_queue_length = len(environment.history_queue)
                     current_information = [iteration, step, history_queue_length, environment.send_fail, reward]
-
                     data.append(list(current_information))
 
                     if speak:
                         print(current_information)
-
-                    # data_writer.writerow(current_information)
 
                     environment.reset_history()
 
                     # calculate loss
                     for node in range(0, environment.total_nodes):
                         if node not in environment.bbu_connected_nodes:
-                            agent_list[node][0].store_transition_episode(reward)
+                            list_of_agent_objects[node][0].store_transition_episode(reward)
 
         print("Completed in", datetime.now() - started)
 
@@ -133,7 +63,7 @@ def main(speak=True):
             for j in range(0, environment.total_nodes):
                 if j not in environment.bbu_connected_nodes:
                     # agent_list[j].learn_val(iteration)
-                    agent_list[j][0].learn5(iteration)
+                    list_of_agent_objects[j][0].learn5(iteration)
                     if speak:
                         learning.append(j)
             if speak:
@@ -181,8 +111,51 @@ def file_dictionary_extractor(file):
                         value[j] = str(value[j])
                         pass
             dictionary.setdefault(key, value)
-    return dictionary, test_file
+    return dictionary
 
+
+def create_agents(dictionary, environment):
+    list_of_agent_objects = []
+    feature_set_cardinality = len(environment.resources_bbu + environment.resources_edges)
+    for nodes in range(0, environment.total_nodes):
+        """
+        Create a list to hold lots of relevant information for each agent at their respective nodes. 
+        The relevant information has those method names given in the q_agent.py script.
+        There are 37 objects in these lists as of 11/20/2018.
+        """
+        # two agents appended to each node
+        list_of_agent_objects.append(
+            [NetworkQAgent(
+                environment.total_nodes,
+                nodes,
+                environment.total_edges_from_node,
+                environment.node_to_node,
+                environment.absolute_node_edge_tuples,
+                environment.bbu_connected_nodes,
+                feature_set_cardinality,
+                dictionary.get('learning_rate')[0],
+                dictionary.get('number_layers')[0],
+                dictionary.get('layer_types'),
+                dictionary.get('mean_value')[0],
+                dictionary.get('std_val')[0],
+                dictionary.get('constant_val')[0]),
+                NetworkValAgent(
+                    environment.total_nodes,
+                    nodes,
+                    environment.total_edges_from_node,
+                    environment.node_to_node,
+                    environment.absolute_node_edge_tuples,
+                    environment.bbu_connected_nodes,
+                    feature_set_cardinality,
+                    dictionary.get('learning_rate')[0],
+                    dictionary.get('number_layers')[0],
+                    dictionary.get('layer_types'),
+                    dictionary.get('mean_value')[0],
+                    dictionary.get('std_val')[0],
+                    dictionary.get('constant_val')[0]
+                )]
+        )
+    return list_of_agent_objects
 
 # def plot_display(file):
 #     filename = file

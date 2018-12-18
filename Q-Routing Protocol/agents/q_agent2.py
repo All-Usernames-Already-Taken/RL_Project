@@ -89,7 +89,9 @@ class NetworkQAgent(object):
     # called in initializer
     def _build_net(self):
         """
-        tf.name_scope is a context manager for defining Python operations
+        tf.name_scope is a context manager for defining Python operations. This context manager validates that the given
+            values are from the same graph, makes that graph the default graph, and pushes a name scope in that graph
+            (see tf.Graph.name_scope for more details on that).
         tf.placeholder returns a `Tensor` that may be used as a handle for feeding a value, but not evaluated directly.
         """
         with tf.name_scope('inputs'):
@@ -402,8 +404,9 @@ class NetworkQAgent(object):
 
     def learn5(self, iteration):
         print('--learning policy--')
-        episode_observation = len(self.episode_observation)
-        self.episode_observation2 = np.array(self.episode_observation).reshape(episode_observation, self.n_features)
+        number_of_steps_in_episode = len(self.episode_observation)
+        self.episode_observation2 = np.array(self.episode_observation).reshape(number_of_steps_in_episode,
+                                                                               self.n_features)
         discounted_episode_rewards_norm = self._discount_and_norm_rewards()
         # print('self.episode_observation2.shape =', self.episode_observation2.shape)
         # print ('np.vstack(self.episode_observation2).shape =',np.vstack(self.episode_observation2).shape)
@@ -412,7 +415,7 @@ class NetworkQAgent(object):
                 self.episode_observation2,
                 np.array(self.episode_actions),
                 np.array(discounted_episode_rewards_norm),
-                episode_observation
+                number_of_steps_in_episode
             )
         _, loss, log_probabilities, act_val = \
             self.session.run(
