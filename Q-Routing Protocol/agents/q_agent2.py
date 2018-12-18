@@ -404,16 +404,15 @@ class NetworkQAgent(object):
 
     def learn5(self, iteration):
         print('--learning policy--')
-        number_of_steps_in_episode = len(self.episode_observation)
-        self.episode_observation2 = np.array(self.episode_observation).reshape(number_of_steps_in_episode,
-                                                                               self.n_features)
+        steps_in_episode = len(self.episode_observation)
+        self.episode_observation2 = np.array(self.episode_observation).reshape(steps_in_episode, self.n_features)
         discounted_episode_rewards_norm = self._discount_and_norm_rewards()
         x_batch, y_batch, z_batch = \
             self.next_mini_batch(
                 self.episode_observation2,
                 np.array(self.episode_actions),
                 np.array(discounted_episode_rewards_norm),
-                number_of_steps_in_episode
+                steps_in_episode
             )
         _, loss, log_probabilities, act_val = \
             self.session.run(
@@ -658,15 +657,15 @@ class NetworkValAgent(object):
         )
         return val
 
-    def learn_val(self):
-        len_obs = len(self.episode_observation)
-        self.episode_observation2 = np.array(self.episode_observation).reshape(len_obs, self.n_features)
+    def learn_val(self, iteration):
+        steps_in_episode = len(self.episode_observation)
+        self.episode_observation2 = np.array(self.episode_observation).reshape(steps_in_episode, self.n_features)
         discounted_episode_rewards_norm = self._discount_and_norm_rewards()
         x_batch, z_batch = \
             self.next_mini_batch(
                 self.episode_observation2,
                 np.array(discounted_episode_rewards_norm),
-                len_obs
+                steps_in_episode
             )
         _, loss = \
             self.session.run(
@@ -693,4 +692,5 @@ class NetworkValAgent(object):
         environment_resources_states = edge_resources_list + bbu_resources_list
         obs = np.array(environment_resources_states).reshape(1, self.n_features)
         val = self.eval_state(obs)
-        self.store_transition_temp(environment_resources_states, val)
+        self.store_transition_temp(environment_resources_states, )
+        return val

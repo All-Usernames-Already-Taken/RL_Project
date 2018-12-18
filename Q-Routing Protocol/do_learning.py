@@ -62,6 +62,7 @@ def main(speak=True):
             for j in range(0, environment.total_nodes):
                 if j not in environment.bbu_connected_nodes:
                     # agent_list[j].learn_val(iteration)
+                    list_of_agent_objects[j][1].learn_val(iteration)
                     list_of_agent_objects[j][0].learn5(iteration)
                     if speak:
                         learning.append(j)
