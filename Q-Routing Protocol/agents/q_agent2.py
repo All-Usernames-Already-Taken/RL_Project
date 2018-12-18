@@ -461,9 +461,9 @@ class NetworkValAgent(object):
         self.val_approx = tf.layers.dense(
             inputs=layer3,
             units=1,
-            activation=tf.nn.sigmoid,  # tf.nn.relu, None tf.nn.sigmoid
+            activation=None,  # tf.nn.relu, None tf.nn.sigmoid
             use_bias=True,
-            kernel_initializer=tf.random_normal_initializer(mean=0, stddev=.1),
+            kernel_initializer=tf.random_normal_initializer(mean=0, stddev=.3),
             bias_initializer=tf.constant_initializer(0),
             kernel_regularizer=None,
             bias_regularizer=None,
