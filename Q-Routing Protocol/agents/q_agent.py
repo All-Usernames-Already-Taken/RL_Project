@@ -35,31 +35,40 @@ class networkTabularQAgent(object):
       "learning_rate" : 0.7, 
       "eps": 0.1, 
       "discount": 1, 
-      "n_iter": 10000000} 
+      "n_iter": 10000000
+      } 
     # self.q = np.zeros((num_nodes, num_nodes, num_actions))
 
     self.hist_resources, self.hist_action = ([],)*2
-    # self.hist_resources = []
-    # self.hist_action = []
-    self.n = node
-    self.links = links
-    self.link_num = link_num
-    self.dests = dests
-    #self.nlinks = nlinks
-    self.n_actions = nlinks[self.n]
-    self.n_features = n_features
+    # self.hist_resources, self.hist_action = [], []
     self.ep_obs, self.ep_as, self.ep_rs = ([],)*3
     # self.ep_obs, self.ep_as, self.ep_rs = [], [], []
     self.ep_obs_temp, self.ep_as_temp = ([],)*2
     # self.ep_obs_temp, self.ep_as_temp = [], []
-    self.lr = learning_rate   #learning_rate
-
+    self.n = node
+    self.links = links
+    self.link_num = link_num
+    self.dests = dests
+    # self.nlinks = nlinks
+    self.n_actions = nlinks[self.n]
+    self.n_features = n_features
+    self.lr = learning_rate 
 
     self.sess = tf.Session()
 
-    observations = tf.placeholder(shape = [None, self.n_actions], dtype = tf.float32)
-    actions = tf.placeholder(shape = [None], dtype = tf.float32)
-    rewards = tf.placeholder(shape = [None], dtype = tf.float32)
+    observations = tf.placeholder(
+                                  shape = [None, self.n_actions], 
+                                  dtype = tf.float32
+                                  )
+    actions = tf.placeholder(
+                            shape = [None], 
+                            dtype = tf.float32
+                            )
+    rewards = tf.placeholder(
+                            shape = [None], 
+                            dtype = tf.float32
+                            )
+    # actions, rewards = (tf.placeholder(shape = [None], dtype = tf.float32),)*2
 
     # model
     self._build_net()
