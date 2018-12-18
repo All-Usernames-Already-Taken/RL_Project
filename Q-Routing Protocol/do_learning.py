@@ -79,6 +79,7 @@ def main(speak=True):
                     # agent_list[j].learn_val(iteration)
                     agent_list[j][1].learn_val(iteration)
                     val_approx = agent_list[j][1].eval_nn(environment.resources_edges, environment.resources_bbu)
+                    print("node:{}, val_approx: {}".format(val_approx, j))
                     agent_list[j][0].learn5(iteration, val_approx)
                     if speak:
                         learning.append(j)

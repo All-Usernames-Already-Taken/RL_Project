@@ -265,7 +265,7 @@ class NetworkQAgent(object):
 
     def learn5(self, iteration, val_approx):
         self.val_approx = val_approx
-        print(self.val_approx)
+        # print(self.val_approx)
         len_obs = len(self.episode_observation)
         self.episode_observation2 = np.array(self.episode_observation).reshape(len_obs, self.n_features)
         discounted_episode_rewards_norm = self._discount_and_norm_rewards()
@@ -510,8 +510,6 @@ class NetworkValAgent(object):
         len_obs = len(self.episode_observation)
         self.episode_observation2 = np.array(self.episode_observation).reshape(len_obs, self.n_features)
         discounted_episode_rewards_norm = self._discount_and_norm_rewards()
-        # print('self.episode_observation2.shape =', self.episode_observation2.shape)
-        # print ('np.vstack(self.episode_observation2).shape =',np.vstack(self.episode_observation2).shape)
         x_batch, z_batch = \
             self.next_mini_batch(
                 self.episode_observation2,
@@ -547,4 +545,4 @@ class NetworkValAgent(object):
         obs = np.array(edge_resources).reshape(1, self.n_features)
         val = self.eval_state(obs)
         self.store_transition_temp(edge_resources)
-        return val
+        return val[0][0]
