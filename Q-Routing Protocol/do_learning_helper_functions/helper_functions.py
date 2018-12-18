@@ -4,6 +4,7 @@ from agents.q_agent2 import NetworkQAgent, NetworkValAgent
 
 
 def file_dictionary_extractor(file, printing=True):
+    """Extract text and integer-text type from input file as a dictionary"""
     test_file, dictionary = file, {}
     print('test_file =', test_file)
     with open(test_file, 'r') as f:
@@ -29,6 +30,7 @@ def file_dictionary_extractor(file, printing=True):
 
 
 def q_nn(dictionary, environment, i):
+    """Initializes a NetworkQAgent class object to manipulate"""
     feature_set_cardinality = len(environment.resources_bbu + environment.resources_edges)
     x = NetworkQAgent(
         environment.total_nodes,
@@ -48,6 +50,7 @@ def q_nn(dictionary, environment, i):
 
 
 def val_nn(dictionary, environment, i):
+    """Initializes a NetworkValAgent class object to manipulate"""
     feature_set_cardinality = len(environment.resources_bbu + environment.resources_edges)
     x = NetworkValAgent(
         environment.total_nodes,
@@ -67,12 +70,8 @@ def val_nn(dictionary, environment, i):
     return x
 
 
-def create_agents():
-    """
-    Create a list to hold lots of relevant information for each agent at their respective nodes.
-    The relevant information has those method names given in the q_agent.py script.
-    There are 37 objects in these lists as of 11/20/2018.
-    """
+def create_agents_lists():
+    """Creates a list to hold all relevant information about each agent at each node"""
     list_of_agent_objects = []
     dictionary = file_dictionary_extractor('input_data/TestPar1.txt')
     environment = NetworkSimulatorEnv()
@@ -84,6 +83,7 @@ def create_agents():
 
 
 def prediction_file(data):
+    """Writes the numpy data results to a txt file"""
     with open('output_data/predictions.txt', 'wb') as outfile:
         for data_slice in data:
             np.savetxt(outfile, data_slice[np.newaxis], fmt='%-7.2f', delimiter=',')
@@ -102,3 +102,5 @@ def prediction_file(data):
 #                     learning.append(j)
 #         if speak:
 #             print('learning:', learning, '\n')
+#   return array
+# append_to_agent_lists(iteration, environment.total_nodes, environment.bbu_connected_nodes, True, agent_objects)
