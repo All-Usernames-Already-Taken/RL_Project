@@ -284,12 +284,11 @@ class NetworkSimulatorEnv(gym.Env, ABC):
 
     def calculate_reward(self):
         reward, q_length = 0, 0
-        print("reward: {}".format(reward))
         for entry in self.history_queue:
             reward += -entry[1]
             q_length += 1
         reward = reward - self.cost * self.send_fail
         q_length += self.send_fail
         avg_reward = reward / q_length
+        print("avg reward: {}".format(avg_reward))
         return avg_reward
-
