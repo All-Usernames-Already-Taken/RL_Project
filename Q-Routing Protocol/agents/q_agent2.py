@@ -379,8 +379,9 @@ class NetworkValAgent(object):
 
     @staticmethod
     def next_mini_batch(x_, z_, batch_size):
-        """""""?!--> what are these x, y, and z, representative of?"""
-        """Create a vector with batch_size quantity of random integers; generate a mini-batch therefrom???."""
+        """Create a vector with batch_size quantity of random integers dictating the mini_batch size.
+        Recall that mini-batches is the subset of the larger set of training instances. The algorithm must observe
+        mini-batch size of training instances before updating parameters instead of observing all training instances"""
         permutation = np.random.permutation(x_.shape[0])
         permutation = permutation[:batch_size]
         x_batch = x_[permutation, :]
@@ -388,10 +389,7 @@ class NetworkValAgent(object):
         return x_batch, z_batch
 
     def _build_value_net(self):
-        """
-        tf.name_scope is a context manager for defining Python operations
-        tf.placeholder returns a `Tensor` that may be used as a handle for feeding a value, but not evaluated directly.
-        """
+
         with tf.name_scope('inputs'):
             self.tf_observations = \
                 tf.placeholder(
@@ -463,7 +461,7 @@ class NetworkValAgent(object):
         self.val_approx = tf.layers.dense(
             inputs=layer3,
             units=1,
-            activation=None, #tf.nn.relu,  # None
+            activation=tf.nn.sigmoid,  # tf.nn.relu, None tf.nn.sigmoid
             use_bias=True,
             kernel_initializer=tf.random_normal_initializer(mean=0, stddev=.1),
             bias_initializer=tf.constant_initializer(0),
