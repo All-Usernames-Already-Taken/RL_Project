@@ -64,14 +64,15 @@ class NetworkQAgent(object):
 
     @staticmethod
     def normalize_weights(x):
-        """Compute softmax values for each sets of scores in x."""
+        """Compute SoftMax values for each sets of scores in x"""
         """?!--> ????? This is not SoftMax """
         return x / x.sum(axis=0)  # only difference
 
     @staticmethod
     def next_mini_batch(x_, y_, z_, batch_size):
-        """?!--> what are these x, y, and z, representative of?"""
-        """Create a vector with batch_size quantity of random integers; generate a mini-batch therefrom???."""
+        """Create a vector with batch_size quantity of random integers dictating the mini_batch size.
+        Recall that mini-batches is the subset of the larger set of training instances. The algorithm must observe
+        mini-batch size of training instances before updating parameters instead of observing all training instances"""
         permutation = np.random.permutation(x_.shape[0])
         permutation = permutation[:batch_size]
         x_batch = x_[permutation, :]
@@ -107,68 +108,73 @@ class NetworkQAgent(object):
 
         # https://github.com/MorvanZhou/Reinforcement-learning-with-tensorflow/blob/master/contents/7_Policy_gradient_softmax/RL_brain.py
 
-        # --> Forward Connected Layer 1
-        self.layer = tf.layers.dense(
-            inputs=self.tf_observations,
-            units=50,
-            activation=None,  # tf.nn.relu,  # tanh activation
-            use_bias=True,
-            kernel_initializer=tf.random_normal_initializer(mean=0, stddev=.1),
-            bias_initializer=tf.constant_initializer(1),
-            kernel_regularizer=None,
-            bias_regularizer=None,
-            activity_regularizer=None,
-            trainable=True,
-            name=None,
-            reuse=None
-        )
-        # --> Forward Connected Layer 2
-        layer2 = tf.layers.dense(
-            inputs=self.layer,
-            units=25,
-            activation=tf.nn.relu,  # tf.nn.relu,  # tanh activation
-            use_bias=True,
-            kernel_initializer=tf.random_normal_initializer(mean=0, stddev=.1),
-            bias_initializer=tf.constant_initializer(1),
-            kernel_regularizer=None,
-            bias_regularizer=None,
-            activity_regularizer=None,
-            trainable=True,
-            name=None,
-            reuse=None
-        )
-        # --> Forward Connected Layer 3
-        layer3 = tf.layers.dense(
-            inputs=layer2,
-            units=15,
-            activation=tf.nn.sigmoid,  # tf.nn.relu,  # tanh activation
-            use_bias=True,
-            kernel_initializer=tf.random_normal_initializer(mean=0, stddev=.1),
-            bias_initializer=tf.constant_initializer(1),
-            kernel_regularizer=None,
-            bias_regularizer=None,
-            activity_regularizer=None,
-            trainable=True,
-            name=None,
-            reuse=None
-        )
-        # --> Forward Connected Layer 4
-        self.all_act = tf.layers.dense(
-            inputs=layer3,
-            units=self.n_actions,
-            activation=tf.nn.relu,
-            use_bias=True,
-            kernel_initializer=tf.random_normal_initializer(mean=0, stddev=.1),
-            bias_initializer=tf.constant_initializer(1),
-            kernel_regularizer=None,
-            bias_regularizer=None,
-            activity_regularizer=None,
-            trainable=True,
-            name=None,
-            reuse=None
-        )
+        """Pass in the environment state and agent actions to the neural net"""
+        # --> Forward Fully Connected Layer 1
+        self.layer = \
+            tf.layers.dense(
+                inputs=self.tf_observations,
+                units=50,
+                activation=None,  # tf.nn.relu,  # tanh activation
+                use_bias=True,
+                kernel_initializer=tf.random_normal_initializer(mean=0, stddev=.1),
+                bias_initializer=tf.constant_initializer(1),
+                kernel_regularizer=None,
+                bias_regularizer=None,
+                activity_regularizer=None,
+                trainable=True,
+                name=None,
+                reuse=None
+            )
+        # --> Forward Fully Connected Layer 2
+        layer2 = \
+            tf.layers.dense(
+                inputs=self.layer,
+                units=25,
+                activation=tf.nn.relu,  # tf.nn.relu,  # tanh activation
+                use_bias=True,
+                kernel_initializer=tf.random_normal_initializer(mean=0, stddev=.1),
+                bias_initializer=tf.constant_initializer(1),
+                kernel_regularizer=None,
+                bias_regularizer=None,
+                activity_regularizer=None,
+                trainable=True,
+                name=None,
+                reuse=None
+            )
+        # --> Forward Fully Connected Layer 3
+        layer3 = \
+            tf.layers.dense(
+                inputs=layer2,
+                units=15,
+                activation=tf.nn.sigmoid,  # tf.nn.relu,  # tanh activation
+                use_bias=True,
+                kernel_initializer=tf.random_normal_initializer(mean=0, stddev=.1),
+                bias_initializer=tf.constant_initializer(1),
+                kernel_regularizer=None,
+                bias_regularizer=None,
+                activity_regularizer=None,
+                trainable=True,
+                name=None,
+                reuse=None
+            )
+        # --> Forward Fully Connected Layer 4
+        self.all_act = \
+            tf.layers.dense(
+                inputs=layer3,
+                units=self.n_actions,
+                activation=tf.nn.relu,
+                use_bias=True,
+                kernel_initializer=tf.random_normal_initializer(mean=0, stddev=.1),
+                bias_initializer=tf.constant_initializer(1),
+                kernel_regularizer=None,
+                bias_regularizer=None,
+                activity_regularizer=None,
+                trainable=True,
+                name=None,
+                reuse=None
+            )
 
-        # use SoftMax to convert to probability
+        """Convert neural network output to probability distribution"""
         self.action_probabilities = tf.nn.softmax(logits=self.all_act, name="action_probabilities")
 
         with tf.name_scope('loss'):
@@ -182,15 +188,10 @@ class NetworkQAgent(object):
                     dtype=None,
                     name="one_hot_tensor"
                 )
-            neg_logarithm_action_probabilities = \
-                -tf.log(
-                    x=self.action_probabilities,
-                    name="negative_log_action_probabilities"
-                )
 
             self.neg_log_prob = \
                 tf.reduce_sum(
-                    input_tensor=neg_logarithm_action_probabilities * one_hot_tensor,
+                    input_tensor=-tf.log(x=self.action_probabilities, name="neg_log_act_prob") * one_hot_tensor,
                     axis=1,
                     name="reduce_sum",
                     reduction_indices=None
@@ -204,7 +205,6 @@ class NetworkQAgent(object):
                     name="reduce_mean",
                     reduction_indices=None
                 )
-            # print("Why is there a print command here, and why print help?")
 
         with tf.name_scope('train'):
             self.train_op = tf.train.AdamOptimizer(self.learning_rate).minimize(self.loss)
@@ -265,6 +265,7 @@ class NetworkQAgent(object):
 
     def learn5(self, iteration, val_approx):
         self.val_approx = val_approx
+        print(self.val_approx)
         len_obs = len(self.episode_observation)
         self.episode_observation2 = np.array(self.episode_observation).reshape(len_obs, self.n_features)
         discounted_episode_rewards_norm = self._discount_and_norm_rewards()
@@ -273,7 +274,8 @@ class NetworkQAgent(object):
                 self.episode_observation2,
                 np.array(self.episode_actions),
                 np.array(discounted_episode_rewards_norm),
-                len_obs
+                # len_obs
+                32
             )
         _, loss, log_probabilities, act_val = \
             self.session.run(
@@ -461,7 +463,7 @@ class NetworkValAgent(object):
         self.val_approx = tf.layers.dense(
             inputs=layer3,
             units=1,
-            activation=tf.nn.relu,
+            activation=None, #tf.nn.relu,  # None
             use_bias=True,
             kernel_initializer=tf.random_normal_initializer(mean=0, stddev=.1),
             bias_initializer=tf.constant_initializer(0),
@@ -514,7 +516,7 @@ class NetworkValAgent(object):
             self.next_mini_batch(
                 self.episode_observation2,
                 np.array(discounted_episode_rewards_norm),
-                len_obs
+                32
             )
         _, loss = \
             self.session.run(

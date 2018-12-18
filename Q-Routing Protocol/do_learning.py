@@ -7,6 +7,7 @@ from do_learning_helper_functions.helper_functions import prediction_file as pf
 
 
 def main(speak=True):
+    speak=False
     # The input parameter in the configuration path is now obsolete
     d = fde('input_data/TestPar1.txt')
     done, data, reward_history = False, [], []
@@ -21,12 +22,13 @@ def main(speak=True):
     environment.bbu_limit = d.get('resources_bbu')[0]
     environment.edge_limit = d.get('resources_edge')[0]
 
-    # Create list to hold state and other information at each node
+    """Create list of 9 nodes each with two neural networks"""
     agent_list = cal()
-    resources = [environment.resources_edges, environment.resources_bbu]
 
     for iteration in range(d.get('iterations')[0]):
-        print("PROCESSING ITERATION: ", iteration, '\n')
+        print("PROCESSING ITERATION: {}\n".format(iteration))
+
+        """Reset environment for each epoch, and record startTime of epoch"""
         node_destination_tuples = environment.reset_env()
         started = datetime.now()
 
@@ -36,12 +38,18 @@ def main(speak=True):
                 current_node_destination_pair = node_destination_tuples[1]
                 current_node = current_node_destination_pair[0]
                 # Action is local edge
-                action = agent_list[current_node][0].act_nn2(resources[0], resources[1])
-                agent_list[current_node][1].store_transition_temp(resources[0] + resources[1])
+                """Store the action in the Q Network agent"""
+                action = agent_list[current_node][0].act_nn2(environment.resources_edges, environment.resources_bbu)
+
+                """Store the environment state and action"""
+                agent_list[current_node][1].store_transition_temp(environment.resources_edges+environment.resources_bbu)
+
+                """Execute action and store information tracking the request for next iteration"""
                 node_destination_tuples, done = environment.step(action)
 
                 # EVERY 50 STEPS CALCULATE CUMULATIVE REWARD AND LOSS
                 if step % d.get('dumps')[0] == 0 and step > 0:
+                    """Calculate reward every dumps size, and track reward history"""
                     reward = environment.calculate_reward()
                     reward_history.append(reward)
                     history_queue_length = len(environment.history_queue)
@@ -53,7 +61,7 @@ def main(speak=True):
 
                     environment.reset_history()
 
-                    # CALCULATE LOSS
+                    """Calculate loss for each node"""
                     for node in range(0, environment.total_nodes):
                         if node not in environment.bbu_connected_nodes:
                             agent_list[node][0].store_transition_episode(reward)

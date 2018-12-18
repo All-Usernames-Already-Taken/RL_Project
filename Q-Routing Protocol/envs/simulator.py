@@ -205,9 +205,6 @@ class NetworkSimulatorEnv(gym.Env, ABC):
 
         return ((self.current_event.node, self.current_event.destination),) * 2
 
-
-    # Helper functions
-
     # ?!--> is this comment reflective of the function? Initializes a signal at random node to a random destination
     def read_in_graph(self):
         self.total_nodes, self.total_edges = 0, 0
@@ -286,12 +283,12 @@ class NetworkSimulatorEnv(gym.Env, ABC):
         return current_event
 
     def calculate_reward(self):
-        reward, l = 0, 0
-        for i in self.history_queue:
-            reward += -i[1]
-            l += 1
+        reward, failures = 0, 0
+        for entry in self.history_queue:
+            reward += -entry[1]
+            failures += 1
         reward = reward - self.cost * self.send_fail
-        l = l + self.send_fail
-        avg_reward = reward / l
+        failures += self.send_fail
+        avg_reward = reward / failures
         return avg_reward
 
