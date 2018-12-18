@@ -25,7 +25,6 @@ class NetworkQAgent(object):
             mean_val,
             std_val,
             constant_val,
-            val_nn
     ):
 
         self.config = {  # cg: reset configuration for each node in the graph
@@ -58,7 +57,7 @@ class NetworkQAgent(object):
         self.total_layers = total_layers
         self.q = []
         self.std_val = std_val
-        self.val_nn = val_nn
+        self.val_approx = np.random.rand()
 
         self.session = tf.Session()
         self._build_net()  # Model
@@ -284,20 +283,14 @@ class NetworkQAgent(object):
                 )
 
             # Reward guided loss
-            val = self.session.run(
-                fetches=self.val_nn.val_approx,
-                feed_dict={self.val_nn.tf_observations: self.tf_observations},
-                options=None,
-                run_metadata=None
-            )
             self.loss = \
                 tf.reduce_mean(
-                    input_tensor=self.neg_log_prob * (self.tf_vt-val),
+                    input_tensor=self.neg_log_prob * (self.tf_vt-self.val_approx),
                     axis=None,
                     name="reduce_mean",
                     reduction_indices=None
                 )
-            print("Why is there a print command here, and why print help?")
+            # print("Why is there a print command here, and why print help?")
 
         with tf.name_scope('train'):
             self.train_op = tf.train.AdamOptimizer(self.learning_rate).minimize(self.loss)
@@ -406,7 +399,8 @@ class NetworkQAgent(object):
                 reward
             )
 
-    def learn5(self, iteration):
+    def learn5(self, iteration,val_approx):
+        self.val_approx = val_approx
         len_obs = len(self.episode_observation)
         self.episode_observation2 = np.array(self.episode_observation).reshape(len_obs, self.n_features)
         discounted_episode_rewards_norm = self._discount_and_norm_rewards()
@@ -730,7 +724,7 @@ class NetworkValAgent(object):
         self.episode_observation_temp.append(state)
 
     def store_transition_episode(self, reward):
-        ep_as_temp = len(self.episode_actions_temp)
+        ep_as_temp = len(self.episode_observation_temp)
         for i in range(0, ep_as_temp):
             self.store_transition(
                 self.episode_observation_temp[i],
@@ -744,7 +738,7 @@ class NetworkValAgent(object):
             run_metadata = None
         )
         return val
-    def learn_val(self):
+    def learn_val(self,iteration):
         len_obs = len(self.episode_observation)
         self.episode_observation2 = np.array(self.episode_observation).reshape(len_obs, self.n_features)
         discounted_episode_rewards_norm = self._discount_and_norm_rewards()
@@ -766,6 +760,8 @@ class NetworkValAgent(object):
                 options=None,
                 run_metadata=None
             )
+        if iteration % 1 == 0:
+            self.episode_observation, self.episode_actions, self.episode_rewards = [], [], []  # empty episode input_data
 
     def _discount_and_norm_rewards(self):
         self.gamma, running_add = 0, 0
