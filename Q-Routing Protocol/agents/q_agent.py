@@ -1,16 +1,12 @@
 import numpy as np
 import tensorflow as tf
 
-<<<<<<< HEAD
+
 class networkTabularQAgent(object):
-  """
-  Agent implementing tabular Q-learning for the NetworkSimulatorEnv.
-  """
+  """Agent implementing tabular Q-learning for the NetworkSimulatorEnv."""
 
   def __init__(
-      self, 
-      num_nodes, 
-      num_actions, 
+      self,
       node, 
       nlinks, 
       links, 
@@ -18,13 +14,7 @@ class networkTabularQAgent(object):
       dests, 
       n_features, 
       learning_rate, 
-      num_layers, 
-      layer_size, 
-      layer_type, 
-      mean_val, 
-      std_val, 
-      constant_val, 
-      activation_type):
+      ):
 
     # cg: reset configuration for each node in the graph by initializing Q-values' means, standard deviations, 
     # learning rates, greediness, and discount factors
@@ -39,40 +29,24 @@ class networkTabularQAgent(object):
     # self.q = np.zeros((num_nodes, num_nodes, num_actions))
 
     self.hist_resources, self.hist_action = ([],)*2
-    # self.hist_resources, self.hist_action = [], []
     self.ep_obs, self.ep_as, self.ep_rs = ([],)*3
-    # self.ep_obs, self.ep_as, self.ep_rs = [], [], []
     self.ep_obs_temp, self.ep_as_temp = ([],)*2
-    # self.ep_obs_temp, self.ep_as_temp = [], []
     self.n = node
     self.links = links
     self.link_num = link_num
     self.dests = dests
-    # self.nlinks = nlinks
     self.n_actions = nlinks[self.n]
     self.n_features = n_features
     self.lr = learning_rate 
 
     self.sess = tf.Session()
 
-    observations = tf.placeholder(
-                                  shape = [None, self.n_actions], 
-                                  dtype = tf.float32
-                                  )
-    actions = tf.placeholder(
-                            shape = [None], 
-                            dtype = tf.float32
-                            )
-    rewards = tf.placeholder(
-                            shape = [None], 
-                            dtype = tf.float32
-                            )
-    # actions, rewards = (tf.placeholder(shape = [None], dtype = tf.float32),)*2
 
     # model
     self._build_net()
     #self._build_net_auto(num_layers, layer_size, layer_type, mean_val, std_val, constant_val, activation_type)
     self.sess.run(tf.global_variables_initializer())
+
 
   def normalize_weights(self, x):
     """Compute softmax values for each sets of scores in x."""
@@ -162,12 +136,11 @@ class networkTabularQAgent(object):
         )
       if layer_type[i] == 'middle':
         temp_layer = tf.layers.dense(
-          inputs = temp_layer_in, 
-          units = layer_size[i], 
-          activation = act[activation_type[i]], 
-          kernel_initializer = tf.random_normal_initializer(mean = mean_val[i], stddev = std_val[i]), 
-          bias_initializer = tf.constant_initializer(constant_val[i])
-=======
+          inputs=temp_layer_in,
+          units=layer_size[i],
+          activation=act[activation_type[i]],
+          kernel_initializer=tf.random_normal_initializer(mean = mean_val[i], stddev = std_val[i]),
+          bias_initializer=tf.constant_initializer(constant_val[i])
 
 class NetworkQAgent(object):
     """Agent implementing Q-learning for the NetworkSimulatorEnv."""

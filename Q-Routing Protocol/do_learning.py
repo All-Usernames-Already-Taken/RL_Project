@@ -4,7 +4,7 @@ from envs.simulator import NetworkSimulatorEnv
 from do_learning_helper_functions.helper_functions import file_dictionary_extractor as fde
 from do_learning_helper_functions.helper_functions import create_agents_lists as cal
 from do_learning_helper_functions.helper_functions import prediction_file as pf
-# MESOSAURIS
+
 
 def main(speak=True):
     # The input parameter in the configuration path is now obsolete
@@ -22,7 +22,8 @@ def main(speak=True):
     environment.edge_limit = d.get('resources_edge')[0]
 
     # Create list to hold state and other information at each node
-    agent_objects = cal()
+    agent_list = cal()
+    resources = [environment.resources_edges, environment.resources_bbu]
 
     for iteration in range(d.get('iterations')[0]):
         print("PROCESSING ITERATION: ", iteration, '\n')
@@ -35,8 +36,8 @@ def main(speak=True):
                 current_node_destination_pair = node_destination_tuples[1]
                 current_node = current_node_destination_pair[0]
                 # Action is local edge
-                action = agent_objects[current_node][0].neural_net_action_selection(environment.resources_edges,
-                                                                                    environment.resources_bbu)
+                action = agent_list[current_node][0].act_nn2(resources[0], resources[1])
+                agent_list[current_node][1].store_transition_temp(resources[0] + resources[1])
                 node_destination_tuples, done = environment.step(action)
 
                 # EVERY 50 STEPS CALCULATE CUMULATIVE REWARD AND LOSS
@@ -55,7 +56,8 @@ def main(speak=True):
                     # CALCULATE LOSS
                     for node in range(0, environment.total_nodes):
                         if node not in environment.bbu_connected_nodes:
-                            agent_objects[node][0].store_transition_episode(reward)
+                            agent_list[node][0].store_transition_episode(reward)
+                            agent_list[node][1].store_transition_episode(reward)
 
         print("Completed in", datetime.now() - started)
 
@@ -67,8 +69,9 @@ def main(speak=True):
             for j in range(0, environment.total_nodes):
                 if j not in environment.bbu_connected_nodes:
                     # agent_list[j].learn_val(iteration)
-                    agent_objects[j][1].learn_val(iteration)
-                    agent_objects[j][0].learn5(iteration)
+                    agent_list[j][1].learn_val(iteration)
+                    val_approx = agent_list[j][1].eval_nn(environment.resources_edges, environment.resources_bbu)
+                    agent_list[j][0].learn5(iteration, val_approx)
                     if speak:
                         learning.append(j)
             if speak:
