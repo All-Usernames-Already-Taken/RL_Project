@@ -40,7 +40,8 @@ class NetworkSimulatorEnv(gym.Env, ABC):
         self.active_packets = 0
         self.bbu_connected_nodes = [3, 5]
         self.bbu_limit = 0
-        self.call_mean = 5  # Network load
+        self.call_mean = 5  # Requests enter network according to a poisson distribution
+
         self.cost = 0
         self.current_event = Event(0.0, 0)  # do I need to do this?
         self.distance = []

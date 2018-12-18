@@ -692,5 +692,5 @@ class NetworkValAgent(object):
         environment_resources_states = edge_resources_list + bbu_resources_list
         obs = np.array(environment_resources_states).reshape(1, self.n_features)
         val = self.eval_state(obs)
-        self.store_transition_temp(environment_resources_states, )
-        return val
+        self.store_transition_temp(environment_resources_states)
+        return print('VALUE NETWORK OUTPUT: {}'.format(val))

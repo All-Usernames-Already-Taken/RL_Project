@@ -3,11 +3,12 @@ import numpy as np
 from datetime import datetime
 from envs.simulator import NetworkSimulatorEnv
 from agents.q_agent2 import NetworkQAgent, NetworkValAgent
+from do_learning_helper_functions.helper_functions import file_dictionary_extractor, create_agents
 
 
 def main(speak=True):
-
-    d = file_dictionary_extractor(sys.argv[1])
+    # The input parameter in the configuration path is now obsolete
+    d = file_dictionary_extractor('input_data/TestPar1.txt')
     done, data, reward_history = False, [], []
 
     environment = NetworkSimulatorEnv()
@@ -19,13 +20,10 @@ def main(speak=True):
     environment.cost = d.get('cost')[0]
     environment.bbu_limit = d.get('resources_bbu')[0]
     environment.edge_limit = d.get('resources_edge')[0]
-
-    list_of_agent_objects = create_agents(d, environment)
-
-    # Have arrival rates be non-stationary
+    list_of_agent_objects = create_agents()
 
     for iteration in range(d.get('iterations')[0]):
-        print("Processing iteration: ", iteration)
+        print("PROCESSING ITERATION: ", iteration, '\n')
         node_destination_tuples = environment.reset_env()
         started = datetime.now()
 
@@ -74,88 +72,98 @@ def main(speak=True):
             # Learn/backpropagation
 
     data = np.array(data)
-    with open('output_data/predictions.txt', 'wb') as outfile:
-        # outfile.write('# Array shape: {0}\n'.format(input_data.shape))
-        # Iterating through n-D array produces slices along the last axis.
-        # Here, input_data[i,:,:] is equivalent
-        for data_slice in data:
-            np.savetxt(outfile, data_slice[np.newaxis], fmt='%-7.2f', delimiter=',')
-
+    prediction_file(data)
     # plot_display('output_data/predictions.txt')
-
-    # Writing out a break to indicate different slices...
-    # outfile.write('# New slice\n')
 
 
 """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 
+# def file_dictionary_extractor(file, printing=True):
+#     test_file, dictionary = file, {}
+#     print('test_file =', test_file)
+#     with open(test_file, 'r') as f:
+#         for line in f.read().splitlines():
+#             if printing:
+#                 print(line)
+#             line = line.strip()
+#             key, value = line.split(':')
+#             key, value = key.strip(), value.strip()
+#             value = value.split(',')
+#             value = [value[i].strip() for i in range(len(value))]
+#             for j in range(len(value)):
+#                 try:
+#                     value[j] = int(value[j])
+#                 except ValueError:
+#                     try:
+#                         value[j] = float(value[j])
+#                     except ValueError:
+#                         value[j] = str(value[j])
+#                         pass
+#             dictionary.setdefault(key, value)
+#     return dictionary
+#
+#
+# def q_nn(dictionary, environment, i):
+#     feature_set_cardinality = len(environment.resources_bbu + environment.resources_edges)
+#     x = NetworkQAgent(
+#             environment.total_nodes,
+#             i,
+#             environment.total_edges_from_node,
+#             environment.node_to_node,
+#             environment.absolute_node_edge_tuples,
+#             environment.bbu_connected_nodes,
+#             feature_set_cardinality,
+#             dictionary.get('learning_rate')[0],
+#             dictionary.get('number_layers')[0],
+#             dictionary.get('layer_types'),
+#             dictionary.get('mean_value')[0],
+#             dictionary.get('std_val')[0],
+#             dictionary.get('constant_val')[0])
+#     return x
+#
+#
+# def val_nn(dictionary, environment, i):
+#     feature_set_cardinality = len(environment.resources_bbu + environment.resources_edges)
+#     x = NetworkValAgent(
+#             environment.total_nodes,
+#             i,
+#             environment.total_edges_from_node,
+#             environment.node_to_node,
+#             environment.absolute_node_edge_tuples,
+#             environment.bbu_connected_nodes,
+#             feature_set_cardinality,
+#             dictionary.get('learning_rate')[0],
+#             dictionary.get('number_layers')[0],
+#             dictionary.get('layer_types'),
+#             dictionary.get('mean_value')[0],
+#             dictionary.get('std_val')[0],
+#             dictionary.get('constant_val')[0]
+#             )
+#     return x
+#
+#
+# def create_agents():
+#     """
+#     Create a list to hold lots of relevant information for each agent at their respective nodes.
+#     The relevant information has those method names given in the q_agent.py script.
+#     There are 37 objects in these lists as of 11/20/2018.
+#     """
+#     list_of_agent_objects = []
+#     dictionary = file_dictionary_extractor('input_data/TestPar1.txt')
+#     environment = NetworkSimulatorEnv()
+#     environment.reset_env()
+#     for nodes in range(0, environment.total_nodes):
+#         # two agents appended to each node
+#         list_of_agent_objects.append([q_nn(dictionary, environment, nodes), val_nn(dictionary, environment, nodes)])
+#     return list_of_agent_objects
+#
+#
+# def prediction_file(data):
+#     with open('output_data/predictions.txt', 'wb') as outfile:
+#         for data_slice in data:
+#             np.savetxt(outfile, data_slice[np.newaxis], fmt='%-7.2f', delimiter=',')
+#     return outfile
 
-def file_dictionary_extractor(file):
-    test_file, dictionary = file, {}
-    print('test_file =', test_file)
-    with open(test_file, 'r') as f:
-        for line in f.read().splitlines():
-            print(line)
-            line = line.strip()
-            key, value = line.split(':')
-            key, value = key.strip(), value.strip()
-            value = value.split(',')
-            value = [value[i].strip() for i in range(len(value))]
-            for j in range(len(value)):
-                try:
-                    value[j] = int(value[j])
-                except ValueError:
-                    try:
-                        value[j] = float(value[j])
-                    except ValueError:
-                        value[j] = str(value[j])
-                        pass
-            dictionary.setdefault(key, value)
-    return dictionary
-
-
-def create_agents(dictionary, environment):
-    list_of_agent_objects = []
-    feature_set_cardinality = len(environment.resources_bbu + environment.resources_edges)
-    for nodes in range(0, environment.total_nodes):
-        """
-        Create a list to hold lots of relevant information for each agent at their respective nodes. 
-        The relevant information has those method names given in the q_agent.py script.
-        There are 37 objects in these lists as of 11/20/2018.
-        """
-        # two agents appended to each node
-        list_of_agent_objects.append(
-            [NetworkQAgent(
-                environment.total_nodes,
-                nodes,
-                environment.total_edges_from_node,
-                environment.node_to_node,
-                environment.absolute_node_edge_tuples,
-                environment.bbu_connected_nodes,
-                feature_set_cardinality,
-                dictionary.get('learning_rate')[0],
-                dictionary.get('number_layers')[0],
-                dictionary.get('layer_types'),
-                dictionary.get('mean_value')[0],
-                dictionary.get('std_val')[0],
-                dictionary.get('constant_val')[0]),
-                NetworkValAgent(
-                    environment.total_nodes,
-                    nodes,
-                    environment.total_edges_from_node,
-                    environment.node_to_node,
-                    environment.absolute_node_edge_tuples,
-                    environment.bbu_connected_nodes,
-                    feature_set_cardinality,
-                    dictionary.get('learning_rate')[0],
-                    dictionary.get('number_layers')[0],
-                    dictionary.get('layer_types'),
-                    dictionary.get('mean_value')[0],
-                    dictionary.get('std_val')[0],
-                    dictionary.get('constant_val')[0]
-                )]
-        )
-    return list_of_agent_objects
 
 # def plot_display(file):
 #     filename = file
