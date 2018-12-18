@@ -9,6 +9,7 @@ from do_learning_helper_functions.helper_functions import file_dictionary_extrac
 def main(speak=True):
     # The input parameter in the configuration path is now obsolete
     d = file_dictionary_extractor('input_data/TestPar1.txt')
+    # agent list has been
     done, data, reward_history = False, [], []
 
     environment = NetworkSimulatorEnv()
