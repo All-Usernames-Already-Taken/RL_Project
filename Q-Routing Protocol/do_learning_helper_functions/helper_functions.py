@@ -88,3 +88,17 @@ def prediction_file(data):
         for data_slice in data:
             np.savetxt(outfile, data_slice[np.newaxis], fmt='%-7.2f', delimiter=',')
     return outfile
+
+#
+# def append_to_agent_lists(iteration, limit, group, speak, array):
+#     learning = []
+#     if iteration % 1 == 0:
+#         for j in range(0, limit):
+#             if j not in group:
+#                 # agent_list[j].learn_val(iteration)
+#                 array[j][1].learn_val(iteration)
+#                 array[j][0].learn5(iteration)
+#                 if speak:
+#                     learning.append(j)
+#         if speak:
+#             print('learning:', learning, '\n')
