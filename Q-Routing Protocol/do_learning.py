@@ -1,179 +1,82 @@
-import gym
 import numpy as np
-from gym import spaces, envs
+from datetime import datetime
 from envs.simulator import NetworkSimulatorEnv
-from agents.q_agent import networkTabularQAgent
-import sys
-
-def main():
-	##
-
-	test_file = sys.argv[1]
-	inputfile = open(test_file)
-	my_text = inputfile.readlines()
-	timesteps = int(my_text[1].replace("\n", "").split(":")[1])
-	iterations = int(my_text[2].replace("\n", "").split(":")[1])
-	num_layers = int(my_text[3].replace("\n", "").split(":")[1])
-	layer_types0 = my_text[4].replace("\n", "").split(":")[1]
-	layer_types = layer_types0.replace(" ", "").split(",")
-	layer_sizes0 = my_text[5].replace("\n", "").split(":")[1]
-	layer_sizes = layer_sizes0.split(",")
-
-	for i in range(len(layer_sizes)):
-		layer_sizes[i] = int(layer_sizes[i])
-
-	mean_val0 = my_text[6].replace("\n", "").split(":")[1]
-	mean_val = mean_val0.split(",")
-	for i in range(len(mean_val)):
-		mean_val[i] = float(mean_val[i])
-	
-	std_val0 = my_text[7].replace("\n", "").split(":")[1]
-	std_val = std_val0.split(",")
-	for i in range(len(std_val)):
-		std_val[i] = float(std_val[i])
-	
-	constant_val0 = my_text[8].replace("\n", "").split(":")[1]
-	constant_val = constant_val0.split(",")
-	for i in range(len(constant_val)):
-		constant_val[i] = float(constant_val[i])
-	
-	dumps = int(my_text[9].replace("\n", "").split(":")[1])
-	arrival_rate = int(my_text[10].replace("\n", "").split(":")[1])
-	learning_rate = float(my_text[11].replace("\n", "").split(":")[1])
-	resources_bbu = int(my_text[12].replace("\n", "").split(":")[1])
-	resources_edge = int(my_text[13].replace("\n", "").split(":")[1])
-	cost = int(my_text[14].replace("\n", "").split(":")[1])
-	act_func0 = my_text[15].replace("\n", "").split(":")[1]
-	act_func = act_func0.split(",")
-	for i in range(len(act_func)):
-		act_func[i] = int(act_func[i])
+from do_learning_helper_functions.helper_functions import file_dictionary_extractor as fde
+from do_learning_helper_functions.helper_functions import create_agents_lists as cal
+from do_learning_helper_functions.helper_functions import prediction_file as pf
 
 
-	# In[180]:
+def main(speak=True):
+    # The input parameter in the configuration path is now obsolete
+    d = fde('input_data/TestPar1.txt')
+    done, data, reward_history = False, [], []
 
+    environment = NetworkSimulatorEnv()
+    environment.reset_env()
 
-	print("Timesteps: %s " % str(timesteps))     #check
-	print("Iterations: %s " % str(iterations))    #check
-	print("Number Layers: %s " % str(num_layers))
-	print("layer_types: %s " % str(layer_types))
-	print("mean_val: %s " % str(mean_val))
-	print("std_val: %s " % str(std_val))
-	print("constant_val: %s " % str(constant_val))
-	print("layer_sizes: %s " % str(layer_sizes))
-	print("dumps: %s" % str(dumps))          #check
-	print("arrival_rate: %s" % str(arrival_rate))   #check
-	print("learning_rate: %s" % str(learning_rate))
-	print("resources_bbu: %s" % str(resources_bbu))  #check
-	print("resources_edge: %s" % str(resources_edge)) #check
-	print("cost: %s" % str(cost))
-	print("act: %s" % str(act_func))#check
-	#set seeds and finish imports
+    # --> Removing the next 6 lines for some reason results in all zero or Nan output
+    # Requests enter network according to a poisson distribution
+    environment.call_mean = d.get('arrival_rate')[0]
+    environment.cost = d.get('cost')[0]
+    environment.bbu_limit = d.get('resources_bbu')[0]
+    environment.edge_limit = d.get('resources_edge')[0]
 
+    # Create list to hold state and other information at each node
+    agent_objects = cal()
 
-	##
-	data = []
-	r_hist = []
-	callmean = arrival_rate
-	#callmean += 0
-	env = NetworkSimulatorEnv()
-	state_pair = env.reset()
-	env.callmean = callmean
-	env.bbu_limit = resources_bbu
-	env.edge_limit = resources_edge
-	env.cost = cost
-	#cg: set up agents for every node
-	agent_list = []
-	n_features = len(env.resources_bbu+env.resources_edges)
-	for i in range(0, env.nnodes):
-		#agent_list.append(networkTabularQAgent(env.nnodes, env.nedges, env.distance, env.nlinks))
-		agent_list.append(
-			networkTabularQAgent(
-				env.nnodes, 
-				env.nedges, 
-				i, 
-				env.nlinks, 
-				env.links, 
-				env.link_num, 
-				env.dests, 
-				n_features, 
-				learning_rate, 
-				num_layers, 
-				layer_sizes, 
-				layer_types, 
-				mean_val, 
-				std_val, 
-				constant_val, 
-				act_func))
-		#num_nodes, num_actions, node, nlinks, links, link_num, dests, n_features)
-	
-	config = agent_list[i].config
-	#agent = networkTabularQAgent(env.nnodes, env.nedges, env.distance, env.nlinks)
-	done = False
-	for i in range(iterations):
-		#callmean += 0
-		#env = NetworkSimulatorEnv()
-		state_pair = env.reset()
-		r_sum_random = r_sum_best = 0
+    for iteration in range(d.get('iterations')[0]):
+        print("PROCESSING ITERATION: ", iteration, '\n')
+        node_destination_tuples = environment.reset_env()
+        started = datetime.now()
 
-		for t in range(timesteps):
-			if not done:
+        for step in range(d.get('time_steps')[0]):
+            # UNLESS TERMINAL STATE REACHED
+            if not done:
+                current_node_destination_pair = node_destination_tuples[1]
+                current_node = current_node_destination_pair[0]
+                # Action is local edge
+                action = agent_objects[current_node][0].neural_net_action_selection(environment.resources_edges,
+                                                                                    environment.resources_bbu)
+                node_destination_tuples, done = environment.step(action)
 
-				current_state = state_pair[1]
-				n = current_state[0]
-				dest = current_state[1]
+                # EVERY 50 STEPS CALCULATE CUMULATIVE REWARD AND LOSS
+                if step % d.get('dumps')[0] == 0 and step > 0:
+                    reward = environment.calculate_reward()
+                    reward_history.append(reward)
+                    history_queue_length = len(environment.history_queue)
+                    current_information = [iteration, step, history_queue_length, environment.send_fail, reward]
+                    data.append(list(current_information))
 
-				#cg: dont need next 3 lines, go directly to act
-				#for action in xrange(env.nlinks[n]):
-				#  reward, next_state = env.pseudostep(action)
-				#  agent.learn(current_state, next_state, reward, action, done, env.nlinks)
+                    if speak:
+                        print(current_information)
 
-				#action  = agent_list[n].act(current_state, env.nlinks, env.links, env.resources_edges, env.resources_bbu, env.link_num, env.dests)
-				action = agent_list[n].act_nn2(env.resources_edges, env.resources_bbu)
-				state_pair, done = env.step(action)
+                    environment.reset_history()
 
-				next_state = state_pair[0]
+                    # CALCULATE LOSS
+                    for node in range(0, environment.total_nodes):
+                        if node not in environment.bbu_connected_nodes:
+                            agent_objects[node][0].store_transition_episode(reward)
 
-				if t%dumps == 0 and t>0:
-					print("iteration")
-					print(i)
-					print("time")
-					print(t)
-					print(env.send_fail)
-					print(len(env.history_queue))
-					print(env.calculate_reward())
-					r = env.calculate_reward()
-					r_hist.append(r)
-					data.append([i, t, len(env.history_queue), env.send_fail, r])
-					env.reset_history()
-					#calculate loss
-					for j in range(0,env.nnodes):
-						if j not in env.dests:
-							agent_list[j].store_transition_episode(r)
+        print("Completed in", datetime.now() - started)
 
-		if i%1 == 0:
-			print("learning")
-			for j in range(0, env.nnodes):
-				if j not in env.dests:
-					print(j)
-					agent_list[j].learn5(i)
+        # Record statistics from iteration
+        # (routed_packets, send fails, average number of hops, average completion time, max completion time)
+        # Learn/backpropagation
+        learning = []
+        if iteration % 1 == 0:
+            for j in range(0, environment.total_nodes):
+                if j not in environment.bbu_connected_nodes:
+                    # agent_list[j].learn_val(iteration)
+                    agent_objects[j][1].learn_val(iteration)
+                    agent_objects[j][0].learn5(iteration)
+                    if speak:
+                        learning.append(j)
+            if speak:
+                print('learning:', learning, '\n')
 
-		#record statistics from iteration (routed_packets, send fails, average number of hops, average completion time, max completion time)
-		#learn/backpropagation
-	pred_file = 'predictions' + test_file.split('.txt')[0]
-	data = np.array(data)
-	with open(pred_file, 'wb') as outfile:
-		#outfile.write('# Array shape: {0}\n'.format(data.shape))
-		# Iterating through a ndimensional array produces slices along
-		# the last axis. This is equivalent to data[i,:,:] in this case
-		for data_slice in data:
+    data = np.array(data)
+    pf(data)
 
-			# The formatting string indicates that I'm writing out
-			# the values in left-justified columns 7 characters in width
-			# with 2 decimal places.
-			np.savetxt(outfile, data_slice[np.newaxis], fmt = '%-7.2f', delimiter = ',')
-
-			# Writing out a break to indicate different slices...
-			#outfile.write('# New slice\n')
 
 if __name__ == '__main__':
-	main()
+    main()
