@@ -47,7 +47,6 @@ class networkTabularQAgent(object):
     #self._build_net_auto(num_layers, layer_size, layer_type, mean_val, std_val, constant_val, activation_type)
     self.sess.run(tf.global_variables_initializer())
 
-
   def normalize_weights(self, x):
     """Compute softmax values for each sets of scores in x."""
     return x / x.sum(axis = 0) # only difference

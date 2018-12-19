@@ -1,6 +1,6 @@
 # based on code: https://github.com/Duncanswilson/q-routing-protocol
 from abc import ABC
-from collections import defaultdict
+from collections import defaultdict as dd
 from heapq import heappush, heappop
 from math import log as m_log
 from random import random
@@ -14,15 +14,12 @@ events = 0
 # Event is fiber path usage
 class Event:
     def __init__(self, time, source):
-        self.birth = time
-        self.destination = UNKNOWN
-        self.event_time = time
-        self.hops = 0
+        self.destination, self.source = UNKNOWN, UNKNOWN
+        self.birth, self.event_time = time, time
+        self.hops, self.q_time = 0, 0
         self.lifetime = 10
         self.node = source
-        self.q_time = 0
         self.resources = []
-        self.source = UNKNOWN
         # ?! --> need to add status for path taken, and which bbu resource used
         # ?! --> what are self.source and self.source that they are different?
 
@@ -36,7 +33,7 @@ special_events = [INJECT, REPORT, END_SIM, UNKNOWN]
 
 class NetworkSimulatorEnv(gym.Env, ABC):
     def __init__(self):
-        self.absolute_node_edge_tuples = defaultdict(dict)
+        self.absolute_node_edge_tuples = dd(dict)
         self.active_packets = 0
         self.bbu_connected_nodes = [3, 5]
         self.bbu_limit = 0
@@ -54,7 +51,7 @@ class NetworkSimulatorEnv(gym.Env, ABC):
         self.injections = 0
         self.next_destination = 0
         self.next_source = 0
-        self.node_to_node = defaultdict(dict)
+        self.node_to_node = dd(dict)
         self.send_fail = 0
         self.total_edges = 0
         self.total_edges_from_node = {}

@@ -1,9 +1,9 @@
 import numpy as np
 from datetime import datetime
 from envs.simulator import NetworkSimulatorEnv
-from do_learning_helper_functions.helper_functions import file_dictionary_extractor as fde
-from do_learning_helper_functions.helper_functions import create_agents_lists as cal
-from do_learning_helper_functions.helper_functions import prediction_file as pf
+from utilities.helper_functions import file_dictionary_extractor as fde
+from utilities.helper_functions import create_agents_lists as cal
+from utilities.helper_functions import prediction_file as pf
 
 
 def main(speak=True):
@@ -16,13 +16,13 @@ def main(speak=True):
 
     # --> Removing the next 6 lines for some reason results in all zero or Nan output
     # Requests enter network according to a poisson distribution
-    environment.call_mean = d.get('arrival_rate')[0]
+    environment.call_mean = d.get('interarrival_time')[0]
     environment.cost = d.get('cost')[0]
     environment.bbu_limit = d.get('resources_bbu')[0]
     environment.edge_limit = d.get('resources_edge')[0]
 
     """Create list of 9 nodes each with two neural networks"""
-    agent_list = cal()
+    agent_list = cal(d)
 
     for iteration in range(d.get('iterations')[0]):
         print("PROCESSING ITERATION: {}\n".format(iteration))
@@ -46,7 +46,7 @@ def main(speak=True):
                 """Execute action and store information tracking the request for next iteration"""
                 node_destination_tuples, done = environment.step(action)
 
-                # EVERY 50 STEPS CALCULATE CUMULATIVE REWARD AND LOSS
+                # EVERY 50 STEPS RECORD STATISTICS
                 if step % d.get('dumps')[0] == 0 and step > 0:
                     """Calculate reward every dumps size, and track reward history"""
                     reward = environment.calculate_reward()
@@ -68,9 +68,9 @@ def main(speak=True):
 
         print("Completed in", datetime.now() - started)
 
-        # Record statistics from iteration
         # (routed_packets, send fails, average number of hops, average completion time, max completion time)
-        # Learn/backpropagation
+
+        # LEARN
         learning = []
         if iteration % 1 == 0:
             for j in range(0, environment.total_nodes):

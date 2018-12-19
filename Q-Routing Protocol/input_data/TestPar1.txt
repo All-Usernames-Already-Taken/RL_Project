@@ -8,7 +8,7 @@ mean_value: 0, 0, 0
 std_val: 0.1, 0.1, 0.1
 constant_val: 1,1,1
 dumps: 50
-arrival_rate: 5
+interarrival_time: 5
 learning_rate: .001
 resources_bbu: 30
 resources_edge: 10

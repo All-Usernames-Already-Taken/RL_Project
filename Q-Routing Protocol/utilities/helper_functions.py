@@ -70,10 +70,10 @@ def val_nn(dictionary, environment, i):
     return x
 
 
-def create_agents_lists():
+def create_agents_lists(arg):
     """Creates a list to hold all relevant information about each agent at each node"""
     list_of_agent_objects = []
-    dictionary = file_dictionary_extractor('input_data/TestPar1.txt')
+    dictionary = arg
     environment = NetworkSimulatorEnv()
     environment.reset_env()
     for nodes in range(0, environment.total_nodes):
@@ -82,9 +82,9 @@ def create_agents_lists():
     return list_of_agent_objects
 
 
-def prediction_file(data):
+def prediction_file(name, data):
     """Writes the numpy data results to a txt file"""
-    with open('output_data/predictions.txt', 'wb') as outfile:
+    with open('output_data/%s.txt' % name, 'wb') as outfile:
         for data_slice in data:
             np.savetxt(outfile, data_slice[np.newaxis], fmt='%-7.2f', delimiter=',')
     return outfile
@@ -104,3 +104,8 @@ def prediction_file(data):
 #             print('learning:', learning, '\n')
 #   return array
 # append_to_agent_lists(iteration, environment.total_nodes, environment.bbu_connected_nodes, True, agent_objects)
+
+# /t_{}i_{}n_{}sz_{}.m_s_c_d_iat_lr_rb_re_c
+# steps
+# iters
+
