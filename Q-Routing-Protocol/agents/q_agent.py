@@ -259,7 +259,6 @@ class NetworkQAgent(object):
             trainable=True,
             name=None,
             reuse=None
->>>>>>> 65476e1cd7ab8479fad251f0a2a3c728036b9038
         )
 
         # --> Forward Connected Layer 2
@@ -430,6 +429,7 @@ class NetworkQAgent(object):
             )
         if iteration % 1 == 0:
             self.observation_length, self.episode_actions, self.episode_rewards = [], [], []  # empty episode input_data
+            self.episode_observation_temp, self.episode_actions_temp = [], []
 
     def _discount_and_norm_rewards(self):
         self.gamma, running_add = 0, 0

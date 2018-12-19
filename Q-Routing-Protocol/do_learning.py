@@ -85,7 +85,7 @@ def main(speak=True):
             if speak:
                 print('learning:', learning, '\n')
 
-    data = np.array(data)
+    data = np.array('results', data)
     pf(data)
 
 

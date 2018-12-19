@@ -2,7 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/.idea/Q-Routing Protocol.iml" filepath="$PROJECT_DIR$/.idea/Q-Routing Protocol.iml" />
+      <module fileurl="file://$PROJECT_DIR$/../Q-Routing-Protocol/.idea/Q-Routing Protocol.iml" filepath="$PROJECT_DIR$/../Q-Routing-Protocol/.idea/Q-Routing Protocol.iml" />
     </modules>
   </component>
 </project>
