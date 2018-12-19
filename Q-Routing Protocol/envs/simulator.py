@@ -290,6 +290,6 @@ class NetworkSimulatorEnv(gym.Env, ABC):
         reward = reward - self.cost * self.send_fail
         q_length += self.send_fail
         avg_reward = reward / q_length
-        print("avg reward: {}".format(avg_reward))
+        # print("avg reward: {}".format(avg_reward))
         return avg_reward
     

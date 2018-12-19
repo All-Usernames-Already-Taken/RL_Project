@@ -269,6 +269,7 @@ class NetworkQAgent(object):
         len_obs = len(self.episode_observation)
         self.episode_observation2 = np.array(self.episode_observation).reshape(len_obs, self.n_features)
         discounted_episode_rewards_norm = self._discount_and_norm_rewards()
+        # print('discounted_episode_rewards_norm =',discounted_episode_rewards_norm)
         x_batch, y_batch, z_batch = \
             self.next_mini_batch(
                 self.episode_observation2,
@@ -277,6 +278,8 @@ class NetworkQAgent(object):
                 # len_obs
                 len_obs
             )
+        print('from policy_nn: x_batch.shape =', x_batch.shape)
+        print('from policy_nn: z_batch.shape =', z_batch.shape)
         _, loss, log_probabilities, act_val = \
             self.session.run(
                 fetches=[self.train_op, self.loss, self.neg_log_prob, self.all_act],
@@ -291,6 +294,7 @@ class NetworkQAgent(object):
         if iteration % 1 == 0:
             # empty episode input_data
             self.episode_observation, self.episode_actions, self.episode_rewards = [], [], []
+            self.episode_observation_temp,self.episode_actions_temp = [],[]
 
     def _discount_and_norm_rewards(self):
         self.gamma, running_add = 0, 0
@@ -446,7 +450,7 @@ class NetworkValAgent(object):
         layer3 = tf.layers.dense(
             inputs=layer2,
             units=15,
-            activation=tf.nn.sigmoid,  # tf.nn.relu,  # tanh activation
+            activation=tf.nn.relu,  # tf.nn.relu,  # tanh activation
             use_bias=True,
             kernel_initializer=tf.random_normal_initializer(mean=0, stddev=.1),
             bias_initializer=tf.constant_initializer(1),
@@ -514,6 +518,8 @@ class NetworkValAgent(object):
                 np.array(discounted_episode_rewards_norm),
                 len_obs
             )
+        print('from val_nn: x_batch.shape =',x_batch.shape)
+        print('from val_nn: z_batch.shape =',z_batch.shape)
         _, loss = \
             self.session.run(
                 fetches=[self.train_value_op, self.value_loss],
@@ -527,6 +533,7 @@ class NetworkValAgent(object):
         if iteration % 1 == 0:
             # empty episode input_data
             self.episode_observation, self.episode_actions, self.episode_rewards = [], [], []
+            self.episode_observation_temp = []
 
     def _discount_and_norm_rewards(self):
         self.gamma, running_add = 0, 0
