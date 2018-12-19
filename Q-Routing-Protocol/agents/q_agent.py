@@ -116,30 +116,33 @@ class networkTabularQAgent(object):
 
   def _build_net_auto(self, num_layers, layer_size, layer_type, mean_val, std_val, constant_val, activation_type):
     with tf.name_scope('inputs'):
-      self.tf_obs = tf.placeholder(tf.float32, [None, self.n_features], name = "observations")
-      self.tf_obs2 = tf.placeholder(tf.float32, [None, self.n_features], name = "observations")
-      self.tf_acts = tf.placeholder(tf.int32, [None, ], name = "actions_num")
-      self.tf_vt = tf.placeholder(tf.float32, [None, ], name = "actions_value")
+        self.tf_obs = tf.placeholder(tf.float32, [None, self.n_features], name = "observations")
+        self.tf_obs2 = tf.placeholder(tf.float32, [None, self.n_features], name = "observations")
+        self.tf_acts = tf.placeholder(tf.int32, [None, ], name = "actions_num")
+        self.tf_vt = tf.placeholder(tf.float32, [None, ], name = "actions_value")
     
     # fc1
     #https://github.com/MorvanZhou/Reinforcement-learning-with-tensorflow/blob/master/contents/7_Policy_gradient_softmax/RL_brain.py
     act = [None, tf.nn.relu, tf.nn.sigmoid]
     for i in range(num_layers):
-      if layer_type[i] == 'first':
-        temp_layer = tf.layers.dense(
-          inputs = self.tf_obs, 
-          units = layer_size[i], 
-          activation = act[activation_type[i]], # activation_type[i], 
-          kernel_initializer = tf.random_normal_initializer(mean = mean_val[i], stddev = std_val[i]), 
-          bias_initializer = tf.constant_initializer(constant_val[i])
-        )
-      if layer_type[i] == 'middle':
-        temp_layer = tf.layers.dense(
-          inputs=temp_layer_in,
-          units=layer_size[i],
-          activation=act[activation_type[i]],
-          kernel_initializer=tf.random_normal_initializer(mean = mean_val[i], stddev = std_val[i]),
-          bias_initializer=tf.constant_initializer(constant_val[i])
+        if layer_type[i] == 'first':
+            temp_layer = \
+                tf.layers.dense(
+                  inputs=self.tf_obs,
+                  units=layer_size[i],
+                  activation=act[activation_type[i]], # activation_type[i],
+                  kernel_initializer=tf.random_normal_initializer(mean=mean_val[i], stddev=std_val[i]),
+                  bias_initializer=tf.constant_initializer(constant_val[i])
+                )
+        if layer_type[i] == 'middle':
+            temp_layer = \
+                tf.layers.dense(
+                  inputs=temp_layer_in,
+                  units=layer_size[i],
+                  activation=act[activation_type[i]],
+                  kernel_initializer=tf.random_normal_initializer(mean=mean_val[i], stddev=std_val[i]),
+                  bias_initializer=tf.constant_initializer(constant_val[i])
+                )
 
 class NetworkQAgent(object):
     """Agent implementing Q-learning for the NetworkSimulatorEnv."""
