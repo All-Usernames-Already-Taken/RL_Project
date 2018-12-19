@@ -58,6 +58,9 @@ class NetworkQAgent(object):
         self.std_val = std_val
         self.val_approx = np.random.rand()
 
+
+# PANDASAURUS REX
+
         self.session = tf.Session()
         self._build_net()  # Model
         self.session.run(tf.global_variables_initializer())
