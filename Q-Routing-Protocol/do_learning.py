@@ -28,8 +28,11 @@ def main(speak=True):
         agent_list = cal(d)
 
         for iteration in range(d.get('iterations')[0]):
-            # if iteration == 1000:
-                # environment.call_mean = interarrival_times[]
+            if iteration == 1000:
+                if x == 4:
+                    environment.call_mean = 9.5
+                else:
+                    environment.call_mean = interarrival_times[x+1]
 
             print("PROCESSING ITERATION: {}\n".format(iteration))
 

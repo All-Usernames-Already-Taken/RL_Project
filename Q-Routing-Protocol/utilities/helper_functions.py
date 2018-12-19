@@ -5,9 +5,9 @@ from agents.q_agent2 import NetworkQAgent, NetworkValAgent
 
 def file_dictionary_extractor(file, printing=True):
     """Extract text and integer-text type from input file as a dictionary"""
-    test_file, dictionary = file, {}
-    print('test_file =', test_file)
-    with open(test_file, 'r') as f:
+    dictionary = {}
+    print('test_file =', file)
+    with open(file, 'r') as f:
         for line in f.read().splitlines():
             if printing:
                 print(line)
