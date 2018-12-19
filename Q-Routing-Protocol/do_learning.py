@@ -14,6 +14,7 @@ def main(speak=True):
 
         environment = NetworkSimulatorEnv()
         environment.reset_env()
+        # dinosaur
 
         # --> Removing the next 6 lines for some reason results in all zero or Nan output
         # Requests enter network according to a poisson distribution
