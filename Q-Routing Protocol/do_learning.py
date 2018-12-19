@@ -7,7 +7,6 @@ from do_learning_helper_functions.helper_functions import prediction_file as pf
 
 
 def main(speak=True):
-    speak=False
     # The input parameter in the configuration path is now obsolete
     d = fde('input_data/TestPar1.txt')
     done, data, reward_history = False, [], []

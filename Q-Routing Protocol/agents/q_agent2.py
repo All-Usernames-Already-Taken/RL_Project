@@ -278,8 +278,8 @@ class NetworkQAgent(object):
                 # len_obs
                 len_obs
             )
-        print('from policy_nn: x_batch.shape =', x_batch.shape)
-        print('from policy_nn: z_batch.shape =', z_batch.shape)
+        # print('from policy_nn: x_batch.shape =', x_batch.shape)
+        # print('from policy_nn: z_batch.shape =', z_batch.shape)
         _, loss, log_probabilities, act_val = \
             self.session.run(
                 fetches=[self.train_op, self.loss, self.neg_log_prob, self.all_act],
@@ -518,8 +518,8 @@ class NetworkValAgent(object):
                 np.array(discounted_episode_rewards_norm),
                 len_obs
             )
-        print('from val_nn: x_batch.shape =',x_batch.shape)
-        print('from val_nn: z_batch.shape =',z_batch.shape)
+        # print('from val_nn: x_batch.shape =',x_batch.shape)
+        # print('from val_nn: z_batch.shape =',z_batch.shape)
         _, loss = \
             self.session.run(
                 fetches=[self.train_value_op, self.value_loss],
