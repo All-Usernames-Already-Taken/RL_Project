@@ -275,7 +275,7 @@ class NetworkQAgent(object):
                 np.array(self.episode_actions),
                 np.array(discounted_episode_rewards_norm),
                 # len_obs
-                32
+                len_obs
             )
         _, loss, log_probabilities, act_val = \
             self.session.run(
@@ -512,7 +512,7 @@ class NetworkValAgent(object):
             self.next_mini_batch(
                 self.episode_observation2,
                 np.array(discounted_episode_rewards_norm),
-                32
+                len_obs
             )
         _, loss = \
             self.session.run(
@@ -544,3 +544,4 @@ class NetworkValAgent(object):
         val = self.eval_state(obs)
         self.store_transition_temp(edge_resources)
         return val[0][0]
+
