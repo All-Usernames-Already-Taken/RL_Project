@@ -1,7 +1,7 @@
 import numpy as np
 from envs.simulator import NetworkSimulatorEnv
 from agents.q_agent2 import NetworkQAgent, NetworkValAgent
-from agents.q_agent import NetworkQAgent
+# from agents.q_agent import NetworkQAgent
 
 
 def file_dictionary_extractor(file, printing=True):
@@ -79,8 +79,8 @@ def create_agents_lists(arg):
     environment.reset_env()
     for nodes in range(0, environment.total_nodes):
         # two agents appended to each node
-        # list_of_agent_objects.append([q_nn(dictionary, environment, nodes), val_nn(dictionary, environment, nodes)])
-        list_of_agent_objects.append(q_nn(dictionary, environment, nodes))
+        list_of_agent_objects.append([q_nn(dictionary, environment, nodes), val_nn(dictionary, environment, nodes)])
+        # list_of_agent_objects.append(q_nn(dictionary, environment, nodes))
     return list_of_agent_objects
 
 

@@ -8,7 +8,8 @@ from utilities.helper_functions import prediction_file as pf
 
 def main(speak=True):
     # interarrival_times = [1, 1.25, 2.5, 5, 7.5]
-    interarrival_times = [1.25, 2.5]
+    interarrival_times = [2.5, 1.25]
+    # interarrival_times = [1.25]
     d = fde('/Users/JLibin/Documents/Graduate School/Fall 2018/Reinforcement Learning/Assignments/Projects/RL_Project/Deep_Q_Routing/Q-Routing-Protocol/input_data/TestPar1.txt')
     for x in range(len(interarrival_times)):
         done, data, reward_history = False, [], []
@@ -48,11 +49,10 @@ def main(speak=True):
                     current_node = current_node_destination_pair[0]
                     # Action is local edge
                     """Store the action in the Q Network agent"""
-                    # action = agent_list[current_node][0].act_nn2(environment.resources_edges, environment.resources_bbu)
-                    action = agent_list[current_node].act_nn2(environment.resources_edges, environment.resources_bbu)
+                    action = agent_list[current_node][0].act_nn2(environment.resources_edges, environment.resources_bbu)
 
                     """Store the environment state and action"""
-                    # agent_list[current_node][1].store_transition_temp(environment.resources_edges+environment.resources_bbu)
+                    agent_list[current_node][1].store_transition_temp(environment.resources_edges+environment.resources_bbu)
 
                     """Execute action and store information tracking the request for next iteration"""
                     node_destination_tuples, done = environment.step(action)
@@ -74,9 +74,9 @@ def main(speak=True):
                         """Calculate loss for each node"""
                         for node in range(0, environment.total_nodes):
                             if node not in environment.bbu_connected_nodes:
-                                agent_list[node].store_transition_episode(reward)
-                                # agent_list[node][0].store_transition_episode(reward)
-                                # agent_list[node][1].store_transition_episode(reward)
+                                # agent_list[node].store_transition_episode(reward)
+                                agent_list[node][0].store_transition_episode(reward)
+                                agent_list[node][1].store_transition_episode(reward)
 
             print("Completed in", datetime.now() - started)
 
@@ -88,11 +88,11 @@ def main(speak=True):
                 for j in range(0, environment.total_nodes):
                     if j not in environment.bbu_connected_nodes:
                         # agent_list[j].learn_val(iteration)
-                        # agent_list[j][1].learn_val(iteration)
-                        # val_approx = agent_list[j][1].eval_nn(environment.resources_edges, environment.resources_bbu)
+                        agent_list[j][1].learn_val(iteration)
+                        val_approx = agent_list[j][1].eval_nn(environment.resources_edges, environment.resources_bbu)
                         # print("node:{}, val_approx: {}".format(j, val_approx))
-                        # agent_list[j][0].learn5(iteration, val_approx)
-                        agent_list[j].learn5(iteration)
+                        agent_list[j][0].learn5(iteration, val_approx)
+                        # agent_list[j].learn5(iteration)
 
                         if speak:
                             learning.append(j)
@@ -100,7 +100,7 @@ def main(speak=True):
                     print('learning:', learning, '\n')
 
         data = np.array(data)
-        pf('actor_critic_interarrival_%s_%s' % (interarrival_times[x], d.get('dumps')), data)
+        pf('ac_ia%s->%s_rslt1' % (interarrival_times[0], interarrival_times[1]), data)
 
 
 if __name__ == '__main__':
